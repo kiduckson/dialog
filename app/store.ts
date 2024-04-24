@@ -31,6 +31,8 @@ export const useDialogStore = create<State & Action>()(
         title: "dialog 1",
         x: 0,
         y: 0,
+        baseHeight: 400,
+        baseWidth: 300,
         width: 400,
         height: 200,
         selected: false,

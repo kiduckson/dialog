@@ -5,9 +5,8 @@ import React, {
   DragEvent,
   FormEvent,
 } from "react";
-import { FiPlus, FiTrash } from "react-icons/fi";
 import { motion } from "framer-motion";
-import { FaFire } from "react-icons/fa";
+import { Plus, Trash, HomeIcon } from "lucide-react";
 
 export const CustomKanban = () => {
   return (
@@ -73,10 +72,12 @@ const Column = ({
   const [active, setActive] = useState(false);
 
   const handleDragStart = (e: DragEvent, card: CardType) => {
+    console.log("COLUMN:: handle Drag Start");
     e.dataTransfer.setData("cardId", card.id);
   };
 
   const handleDragEnd = (e: DragEvent) => {
+    console.log("COLUMN:: handle Drag Start");
     const cardId = e.dataTransfer.getData("cardId");
 
     setActive(false);
@@ -272,7 +273,7 @@ const BurnBarrel = ({
           : "border-neutral-500 bg-neutral-500/20 text-neutral-500"
       }`}
     >
-      {active ? <FaFire className="animate-bounce" /> : <FiTrash />}
+      {active ? <Plus className="animate-bounce" /> : <Trash />}
     </div>
   );
 };
@@ -324,7 +325,7 @@ const AddCard = ({ column, setCards }: AddCardProps) => {
               className="flex items-center gap-1.5 rounded bg-neutral-50 px-3 py-1.5 text-xs text-neutral-950 transition-colors hover:bg-neutral-300"
             >
               <span>Add</span>
-              <FiPlus />
+              <Plus />
             </button>
           </div>
         </motion.form>
@@ -335,7 +336,7 @@ const AddCard = ({ column, setCards }: AddCardProps) => {
           className="flex w-full items-center gap-1.5 px-3 py-1.5 text-xs text-neutral-400 transition-colors hover:text-neutral-50"
         >
           <span>Add card</span>
-          <FiPlus />
+          <Plus />
         </motion.button>
       )}
     </>
