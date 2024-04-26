@@ -37,15 +37,15 @@ export const useDialogStore = create<State & Action>()(
         height: 200,
         selected: false,
       },
-      {
-        id: "fbe849de-2656-4c60-a299-5f4a8aeb5567",
-        title: "dialog 2",
-        x: 0,
-        y: 0,
-        width: 400,
-        height: 200,
-        selected: false,
-      },
+      // {
+      //   id: "fbe849de-2656-4c60-a299-5f4a8aeb5567",
+      //   title: "dialog 2",
+      //   x: 0,
+      //   y: 0,
+      //   width: 400,
+      //   height: 200,
+      //   selected: false,
+      // },
     ] as IDialog[],
     addDialog: (dialog: IDialog) =>
       set((state) => {

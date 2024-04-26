@@ -1,6 +1,13 @@
 "use client";
 
-import { PanInfo, motion, motionValue } from "framer-motion";
+import {
+  PanInfo,
+  motion,
+  motionValue,
+  useDragControls,
+  useMotionValue,
+  useMotionValueEvent,
+} from "framer-motion";
 import { useEffect, useState, useMemo, forwardRef, DragEvent } from "react";
 import { IDialog, useDialogStore } from "@/app/store";
 import { cn } from "@/lib/utils";
@@ -21,16 +28,6 @@ enum ExpandDirection {
   left,
   right,
 }
-
-/**
- * TODO
- * 1. 화면 크기에 따라 위치 x ,y 조정
- * 2. 선택
- *  - 선택시 highlight
- *  - 크기조절
- *
- * 1. header selected -> change to the chrome like tap
- */
 
 const handleVariant = cva("absolute hover:bg-card/20", {
   variants: {
@@ -58,14 +55,14 @@ const handleVariant = cva("absolute hover:bg-card/20", {
 const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
   ({ dialog }, ref) => {
     const [enlarged, setEnlarged] = useState<EnlargedState>(EnlargedState.mid);
+    const controls = useDragControls();
     const updateDialog = useDialogStore((state) => state.updateDialog);
     const selectDialog = useDialogStore((state) => state.selectDialog);
     const [windowWidth, setWindowWidth] = useState<number>(1200);
-
-    const rightConstraint = useMemo(
-      () => windowWidth - dialog.width - 96,
-      [windowWidth, dialog.width]
-    );
+    const x = useMotionValue(dialog.x);
+    const y = useMotionValue(dialog.y);
+    const width = useMotionValue(dialog.width);
+    const height = useMotionValue(dialog.height);
 
     useEffect(() => {
       function handleResize() {
@@ -80,39 +77,60 @@ const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
       };
     }, [windowWidth]);
 
+    const rightConstraint = useMemo(
+      () => windowWidth - dialog.width - 96,
+      [windowWidth, dialog.width]
+    );
+
+    useMotionValueEvent(x, "animationComplete", () => {
+      console.log("x complete", x.get());
+      x.set(Math.min(x.get(), rightConstraint));
+      updateDialog({
+        ...dialog,
+        x: x.get(),
+      });
+    });
+
+    useMotionValueEvent(y, "animationComplete", () => {
+      console.log("y complete", y.get());
+      y.set(Math.min(y.get()));
+      updateDialog({
+        ...dialog,
+        y: y.get(),
+      });
+    });
+
+    /**
+     * width
+     */
+    useMotionValueEvent(width, "change", (latest) => {
+      x.set(Math.min(x.get(), rightConstraint));
+    });
+
+    useMotionValueEvent(width, "animationComplete", () => {
+      console.log("width complete");
+      updateDialog({
+        ...dialog,
+        width: width.get(),
+      });
+    });
+
     const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       setEnlarged(
         (prev: EnlargedState) =>
           (prev + 1) % (Object.keys(EnlargedState).length / 2)
       );
-    };
-
-    const handleClick = (
-      e: MouseEvent | TouchEvent | PointerEvent | React.MouseEvent,
-      info?: PanInfo
-    ) => {
-      selectDialog(dialog.id);
-    };
-
-    const handleDragEnd = (
-      e: MouseEvent | TouchEvent | PointerEvent,
-      info: PanInfo
-    ) => {
-      updateDialog({
-        ...dialog,
-        x: Math.min(Math.max(dialog.x + info.offset.x, 0), rightConstraint),
-        y: Math.max(dialog.y + info.offset.y, 0),
-      });
-    };
-
-    useEffect(() => {
       updateDialog({
         ...dialog,
         x: Math.min(dialog.x, rightConstraint),
         width: 190 * (enlarged + 1),
-        height: 140 * enlarged + 32,
+        height: 140 * enlarged + 64,
       });
-    }, [enlarged, rightConstraint]);
+    };
+
+    const handleClick = () => {
+      selectDialog(dialog.id);
+    };
 
     const dragConstraints = {
       top: 0,
@@ -120,18 +138,20 @@ const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
       left: 0,
     };
 
-    const widthMotionV = motionValue(0);
-
+    // TODO
     const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
-      if (direction === ExpandDirection.right) {
-        updateDialog({
-          ...dialog,
-          width: Math.min(
-            Math.max(dialog.width + info.offset.x, 190),
-            rightConstraint
-          ),
-          y: Math.max(dialog.y + info.offset.y, 0),
-        });
+      switch (direction) {
+        case ExpandDirection.right:
+          width.set(dialog.width + info.offset.x);
+          break;
+        case ExpandDirection.left:
+          console.log(info.offset.x, dialog.x);
+
+          // x.set(dialog.x + info.offset.x);
+          // width.set(dialog.width + -info.offset.x);
+          break;
+        default:
+          break;
       }
     };
 
@@ -141,6 +161,12 @@ const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
           "absolute top-0 left-0 flex flex-col bg-neutral-400 border  border-neutral-500 shadow-neutral-800",
           dialog.selected ? "shadow-lg border-white" : "shadow-none"
         )}
+        style={{
+          x,
+          y,
+          width,
+          height,
+        }}
         layout
         initial={{
           x: dialog.x,
@@ -159,9 +185,10 @@ const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
         dragConstraints={dragConstraints}
         dragElastic={false}
         dragMomentum={false}
+        dragControls={controls}
+        dragListener={false}
         onClick={handleClick}
         onDragStart={handleClick}
-        onDragEnd={handleDragEnd}
         data-dialog-id={dialog.id}
       >
         <motion.span
@@ -169,85 +196,43 @@ const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
           className={`flex items-center justify-between h-8  border-b p-1 cursor-pointer select-none bg-neutral-700`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
+          onPointerDown={(event) => controls.start(event)}
         >
           <span className="hover:bg-slate-700 corner">{dialog.title}</span>
         </motion.span>
         <div className="h-full w-full bg-orange-300">body</div>
+
         <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.top }))}
-          drag
+          className={cn(handleVariant({ handlePos: ExpandDirection.right }))}
+          drag="x"
           dragElastic={false}
           dragMomentum={false}
+          dragSnapToOrigin
           onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.top)
+            handleDialogResize(info, ExpandDirection.right)
           }
-        />
-        <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.topLeft }))}
-          drag
-          dragElastic={false}
-          dragMomentum={false}
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.topLeft)
-          }
-        />
-        <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.topRight }))}
-          drag
-          dragElastic={false}
-          dragMomentum={false}
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.topRight)
-          }
-        />
-        <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.bottom }))}
-          drag
-          dragElastic={false}
-          dragMomentum={false}
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.bottom)
-          }
-        />
-        <motion.span
-          className={cn(
-            handleVariant({ handlePos: ExpandDirection.bottomLeft })
-          )}
-          drag
-          dragElastic={false}
-          dragMomentum={false}
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.bottomLeft)
-          }
-        />
-        <motion.span
-          className={cn(
-            handleVariant({ handlePos: ExpandDirection.bottomRight })
-          )}
-          drag
-          dragElastic={false}
-          dragMomentum={false}
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.bottomRight)
+          onDragEnd={(e, info: PanInfo) =>
+            updateDialog({
+              ...dialog,
+              width: dialog.width + info.offset.x,
+            })
           }
         />
         <motion.span
           className={cn(handleVariant({ handlePos: ExpandDirection.left }))}
-          drag
+          drag="x"
           dragElastic={false}
           dragMomentum={false}
+          dragSnapToOrigin
           onDrag={(e, info: PanInfo) =>
             handleDialogResize(info, ExpandDirection.left)
           }
-        />
-        <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.right }))}
-          drag
-          dragElastic={false}
-          dragMomentum={false}
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.right)
-          }
+          // onDragEnd={(e, info: PanInfo) =>
+          //   updateDialog({
+          //     ...dialog,
+          //     width: dialog.width + info.offset.x,
+          //   })
+          // }
         />
       </motion.div>
     );
