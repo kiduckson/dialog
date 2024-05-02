@@ -12,24 +12,27 @@ import { useEffect, useState, useMemo, forwardRef, DragEvent } from "react";
 import { IDialog, useDialogStore } from "@/app/store";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import DialogHandle from "./dialogHandle";
+import { IHandleClick } from "@/app/dialogContainer";
+import Tab from "./tab";
 
 enum EnlargedState {
   shrink,
   mid,
   large,
 }
-enum ExpandDirection {
+export enum ExpandDirection {
   top,
-  topLeft,
-  topRight,
   bottom,
-  bottomLeft,
-  bottomRight,
   left,
   right,
+  topLeft,
+  topRight,
+  bottomLeft,
+  bottomRight,
 }
 
-const handleVariant = cva("absolute hover:bg-card/20", {
+export const handleVariant = cva("absolute hover:bg-card/20", {
   variants: {
     handlePos: {
       [ExpandDirection.top]:
@@ -52,191 +55,259 @@ const handleVariant = cva("absolute hover:bg-card/20", {
   },
 });
 
-const Dialog = forwardRef<HTMLDivElement, { dialog: IDialog }>(
-  ({ dialog }, ref) => {
-    const [enlarged, setEnlarged] = useState<EnlargedState>(EnlargedState.mid);
-    const controls = useDragControls();
-    const updateDialog = useDialogStore((state) => state.updateDialog);
-    const selectDialog = useDialogStore((state) => state.selectDialog);
-    const [windowWidth, setWindowWidth] = useState<number>(1200);
-    const x = useMotionValue(dialog.x);
-    const y = useMotionValue(dialog.y);
-    const width = useMotionValue(dialog.width);
-    const height = useMotionValue(dialog.height);
+const Dialog = forwardRef<
+  HTMLDivElement,
+  { dialog: IDialog; handleClick: any }
+>(({ dialog }, ref) => {
+  const controls = useDragControls();
+  const updateDialog = useDialogStore((state) => state.updateDialog);
+  const selectDialog = useDialogStore((state) => state.selectDialog);
+  const [windowWidth, setWindowWidth] = useState<number>(1200);
+  const x = useMotionValue(dialog.x);
+  const y = useMotionValue(dialog.y);
+  const width = useMotionValue(dialog.width);
+  const height = useMotionValue(dialog.height);
 
-    useEffect(() => {
-      function handleResize() {
-        setWindowWidth(window.innerWidth);
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    if (typeof window !== "undefined") {
+      setWindowWidth(window.innerWidth);
+    }
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [windowWidth]);
+
+  const rightConstraint = useMemo(
+    () => windowWidth - dialog.width - 96,
+    [windowWidth, dialog.width]
+  );
+
+  useMotionValueEvent(x, "animationComplete", () => {
+    updateDialog({
+      ...dialog,
+      x: x.get(),
+      y: y.get(),
+    });
+  });
+
+  useMotionValueEvent(y, "animationComplete", () => {
+    updateDialog({
+      ...dialog,
+      x: x.get(),
+      y: y.get(),
+    });
+  });
+
+  /**
+   * width
+   */
+  useMotionValueEvent(width, "change", (latest) => {
+    // x.set(Math.min(x.get(), rightConstraint));
+  });
+
+  useMotionValueEvent(width, "animationComplete", () => {
+    updateDialog({
+      ...dialog,
+      width: width.get(),
+    });
+  });
+
+  const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    console.log("double clicked");
+  };
+
+  const handleClick = (
+    e: React.MouseEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent
+  ) => {
+    e.stopPropagation();
+    let el: HTMLElement | null = e.target as HTMLElement;
+    let id;
+    while (el) {
+      if (el?.dataset.dialogId) {
+        id = el.dataset.dialogId;
+        break;
       }
-      if (typeof window !== "undefined") {
-        setWindowWidth(window.innerWidth);
-      }
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }, [windowWidth]);
+      el = el.parentElement;
+    }
+    selectDialog(id);
+  };
 
-    const rightConstraint = useMemo(
-      () => windowWidth - dialog.width - 96,
-      [windowWidth, dialog.width]
-    );
+  const dragConstraints = {
+    top: 0,
+    right: rightConstraint,
+    left: 0,
+  };
 
-    useMotionValueEvent(x, "animationComplete", () => {
-      console.log("x complete", x.get());
-      x.set(Math.min(x.get(), rightConstraint));
-      updateDialog({
-        ...dialog,
-        x: x.get(),
-      });
-    });
-
-    useMotionValueEvent(y, "animationComplete", () => {
-      console.log("y complete", y.get());
-      y.set(Math.min(y.get()));
-      updateDialog({
-        ...dialog,
-        y: y.get(),
-      });
-    });
-
-    /**
-     * width
-     */
-    useMotionValueEvent(width, "change", (latest) => {
-      x.set(Math.min(x.get(), rightConstraint));
-    });
-
-    useMotionValueEvent(width, "animationComplete", () => {
-      console.log("width complete");
-      updateDialog({
-        ...dialog,
-        width: width.get(),
-      });
-    });
-
-    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      setEnlarged(
-        (prev: EnlargedState) =>
-          (prev + 1) % (Object.keys(EnlargedState).length / 2)
+  // TODO
+  const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
+    const setRight = () => {
+      width.set(
+        Math.min(dialog.width + info.offset.x, windowWidth - x.get() - 96)
       );
-      updateDialog({
-        ...dialog,
-        x: Math.min(dialog.x, rightConstraint),
-        width: 190 * (enlarged + 1),
-        height: 140 * enlarged + 64,
-      });
     };
 
-    const handleClick = () => {
-      selectDialog(dialog.id);
+    const setLeft = () => {
+      x.set(dialog.x + info.offset.x);
+      width.set(dialog.width + -info.offset.x);
     };
 
-    const dragConstraints = {
-      top: 0,
-      right: rightConstraint,
-      left: 0,
+    const setTop = () => {
+      y.set(dialog.y + info.offset.y);
+      height.set(dialog.height + -info.offset.y);
     };
 
-    // TODO
-    const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
-      switch (direction) {
-        case ExpandDirection.right:
-          width.set(dialog.width + info.offset.x);
-          break;
-        case ExpandDirection.left:
-          console.log(info.offset.x, dialog.x);
-
-          // x.set(dialog.x + info.offset.x);
-          // width.set(dialog.width + -info.offset.x);
-          break;
-        default:
-          break;
-      }
+    const setBottom = () => {
+      height.set(dialog.height + info.offset.y);
     };
 
-    return (
-      <motion.div
-        className={cn(
-          "absolute top-0 left-0 flex flex-col bg-neutral-400 border  border-neutral-500 shadow-neutral-800",
-          dialog.selected ? "shadow-lg border-white" : "shadow-none"
-        )}
-        style={{
-          x,
-          y,
-          width,
-          height,
-        }}
-        layout
-        initial={{
-          x: dialog.x,
-          y: dialog.y,
-          width: dialog.width,
-          height: dialog.height,
-        }}
-        animate={{
-          x: dialog.x,
-          y: dialog.y,
-          width: dialog.width,
-          height: dialog.height,
-          zIndex: dialog.selected ? 1 : 0,
-        }}
-        drag
-        dragConstraints={dragConstraints}
-        dragElastic={false}
-        dragMomentum={false}
-        dragControls={controls}
-        dragListener={false}
-        onClick={handleClick}
-        onDragStart={handleClick}
-        data-dialog-id={dialog.id}
-      >
-        <motion.span
-          layout
-          className={`flex items-center justify-between h-8  border-b p-1 cursor-pointer select-none bg-neutral-700`}
-          tabIndex={-1}
-          onDoubleClick={handleDoubleClick}
-          onPointerDown={(event) => controls.start(event)}
-        >
-          <span className="hover:bg-slate-700 corner">{dialog.title}</span>
-        </motion.span>
-        <div className="h-full w-full bg-orange-300">body</div>
+    const operations = {
+      [ExpandDirection.right]: () => {
+        setRight();
+      },
+      [ExpandDirection.left]: () => {
+        setLeft();
+      },
+      [ExpandDirection.bottom]: () => {
+        setBottom();
+      },
+      [ExpandDirection.top]: () => {
+        setTop();
+      },
+      [ExpandDirection.bottomLeft]: () => {
+        setBottom();
+        setLeft();
+      },
+      [ExpandDirection.bottomRight]: () => {
+        setBottom();
+        setRight();
+      },
+      [ExpandDirection.topLeft]: () => {
+        setTop();
+        setLeft();
+      },
+      [ExpandDirection.topRight]: () => {
+        setTop();
+        setRight();
+      },
+    };
+    const operation = operations[direction];
+    if (operation) {
+      operation();
+    }
+  };
+  const handleHandleDragEnd = () => {
+    updateDialog({
+      ...dialog,
+      y: y.get(),
+      x: x.get(),
+      width: width.get(),
+      height: height.get(),
+    });
+  };
 
-        <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.right }))}
-          drag="x"
-          dragElastic={false}
-          dragMomentum={false}
-          dragSnapToOrigin
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.right)
-          }
-          onDragEnd={(e, info: PanInfo) =>
-            updateDialog({
-              ...dialog,
-              width: dialog.width + info.offset.x,
-            })
-          }
-        />
-        <motion.span
-          className={cn(handleVariant({ handlePos: ExpandDirection.left }))}
-          drag="x"
-          dragElastic={false}
-          dragMomentum={false}
-          dragSnapToOrigin
-          onDrag={(e, info: PanInfo) =>
-            handleDialogResize(info, ExpandDirection.left)
-          }
-          // onDragEnd={(e, info: PanInfo) =>
-          //   updateDialog({
-          //     ...dialog,
-          //     width: dialog.width + info.offset.x,
-          //   })
-          // }
-        />
-      </motion.div>
+  const handles = Object.values(ExpandDirection).slice(
+    Math.floor(Object.keys(ExpandDirection).length / 2)
+  );
+
+  const updateTabOrder = (fromIndex: number, shiftInOrder: number) => {
+    const tabs = [...dialog.tabs];
+
+    let toIndex = Math.max(
+      0,
+      Math.min(tabs.length - 1, fromIndex + shiftInOrder)
     );
-  }
-);
+
+    if (fromIndex === toIndex) {
+      return;
+    }
+
+    const newTab = tabs.splice(fromIndex, 1)[0];
+
+    if (fromIndex < toIndex) {
+      toIndex -= 1;
+    }
+
+    tabs.splice(toIndex, 0, newTab);
+
+    const newTabs = tabs.map((tab, idx) => ({ ...tab, order: idx }));
+
+    updateDialog({
+      ...dialog,
+      tabs: newTabs,
+    });
+  };
+
+  return (
+    <motion.div
+      className={cn(
+        "absolute top-0 left-0 flex flex-col bg-neutral-400 border  border-neutral-500 shadow-neutral-800",
+        dialog.selected ? "shadow-lg border-white" : "shadow-none"
+      )}
+      style={{
+        x,
+        y,
+        width,
+        height,
+      }}
+      layout
+      initial={{
+        x: dialog.x,
+        y: dialog.y,
+        width: dialog.width,
+        height: dialog.height,
+      }}
+      animate={{
+        x: dialog.x,
+        y: dialog.y,
+        width: dialog.width,
+        height: dialog.height,
+        zIndex: dialog.zIndex,
+      }}
+      drag
+      dragConstraints={dragConstraints}
+      dragElastic={false}
+      dragMomentum={false}
+      dragControls={controls}
+      dragListener={false}
+      onClick={handleClick}
+      onDragStart={handleClick}
+      data-dialog-id={dialog.id}
+    >
+      <motion.div
+        layout
+        className={`flex items-center relative justify-between h-8 border-b px-2 cursor-pointer select-none bg-neutral-700`}
+        tabIndex={-1}
+        onDoubleClick={handleDoubleClick}
+        onPointerDown={(event) => controls.start(event)}
+      >
+        <motion.span layout className="flex gap-1 max-w-[80%]">
+          {[...dialog.tabs]
+            .sort((a, b) => a.order - b.order)
+            .map((tab) => (
+              <Tab
+                key={tab.id}
+                id={tab.id}
+                order={tab.order}
+                title={tab.title}
+                updateTabOrder={updateTabOrder}
+              />
+            ))}
+        </motion.span>
+      </motion.div>
+      <div className="h-full w-full bg-orange-300">body</div>
+      {handles.map((handle) => (
+        <DialogHandle
+          direction={handle as ExpandDirection}
+          handleDialogResize={handleDialogResize}
+          handleHandleDragEnd={handleHandleDragEnd}
+        />
+      ))}
+    </motion.div>
+  );
+});
 
 export default Dialog;

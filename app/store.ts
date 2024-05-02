@@ -5,47 +5,64 @@ export interface IDialog {
   id: string;
   x: number;
   y: number;
-  title: string;
-  baseWidth: number;
-  baseHeight: number;
+  zIndex: number;
   width: number;
   height: number;
   selected: boolean;
+  tabs: Itab[];
+}
+export interface Itab {
+  id: string;
+  title: string;
+  active: boolean;
+  content: string;
+  order: number;
 }
 
 type State = {
   dialogs: IDialog[];
+  length: number;
 };
 
 type Action = {
   addDialog: (dialog: IDialog) => void;
   updateDialog: (newDialog: IDialog) => void;
-  selectDialog: (id: string) => void;
+  selectDialog: (id: string | undefined) => void;
 };
 
 export const useDialogStore = create<State & Action>()(
   immer((set) => ({
+    length: 0,
     dialogs: [
       {
         id: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        title: "dialog 1",
         x: 0,
         y: 0,
-        baseHeight: 400,
-        baseWidth: 300,
+        zIndex: 0,
         width: 400,
         height: 200,
         selected: false,
+        tabs: [
+          {
+            id: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
+            title: "tab1",
+            active: true,
+            order: 0,
+          },
+          {
+            id: "cce836b9-054f-4dec-ba99-34f35395e93e",
+            title: "tab2",
+            active: false,
+            order: 1,
+          },
+          {
+            id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
+            title: "tab3",
+            active: false,
+            order: 2,
+          },
+        ],
       },
-      // {
-      //   id: "fbe849de-2656-4c60-a299-5f4a8aeb5567",
-      //   title: "dialog 2",
-      //   x: 0,
-      //   y: 0,
-      //   width: 400,
-      //   height: 200,
-      //   selected: false,
-      // },
     ] as IDialog[],
     addDialog: (dialog: IDialog) =>
       set((state) => {
@@ -62,13 +79,20 @@ export const useDialogStore = create<State & Action>()(
           ...state.dialogs.slice(id + 1),
         ];
       }),
-    selectDialog: (id: string) =>
+    selectDialog: (id: string | undefined) =>
       set((state) => {
         state.dialogs = [
-          ...state.dialogs.map((dialog) => ({
-            ...dialog,
-            selected: id === dialog.id,
-          })),
+          ...state.dialogs.map((dialog) => {
+            if (id === dialog.id) {
+              state.length += 1;
+            }
+
+            return {
+              ...dialog,
+              selected: id === dialog.id,
+              zIndex: id === dialog.id ? state.length : dialog.zIndex,
+            };
+          }),
         ];
       }),
   }))
