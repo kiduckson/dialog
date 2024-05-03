@@ -74,7 +74,7 @@ const Dialog = ({
   const controls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
   const updateDialog = useDialogStore((state) => state.updateDialog);
-  const selectDialog = useDialogStore((state) => state.selectDialog);
+  const dialogs = useDialogStore((state) => state.dialogs);
   const addDialog = useDialogStore((state) => state.addDialog);
   const [windowWidth, setWindowWidth] = useState<number>(1200);
   const x = useMotionValue(dialog.x);
@@ -268,6 +268,12 @@ const Dialog = ({
   };
 
   const handleTabMerge = () => {
+    x.get();
+    y.get();
+    dialogs.forEach((dialog) => {
+      dialog.y + 32;
+      const xThresh = dialog.x + dialog.width;
+    });
     /**
      * 0. dragged dialog position
      * 1. target dialog x, y, width.
