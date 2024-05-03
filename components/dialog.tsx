@@ -267,6 +267,18 @@ const Dialog = ({
     });
   };
 
+  const handleTabMerge = () => {
+    /**
+     * 0. dragged dialog position
+     * 1. target dialog x, y, width.
+     *  - calculate the top nav area
+     *  - if the
+     * 2. if the dialog has more than one tap
+     *    if not do nothing
+     * 3.
+     */
+  };
+
   return (
     <motion.div
       className={cn(
