@@ -9,7 +9,9 @@ import {
   useMotionValueEvent,
 } from "framer-motion";
 import { useEffect, useState, useMemo, forwardRef, DragEvent } from "react";
-import { IDialog, useDialogStore } from "@/app/store";
+import { v4 as uuidv4 } from "uuid";
+
+import { IDialog, Itab, useDialogStore } from "@/app/store";
 import { cn } from "@/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
 import DialogHandle from "./dialogHandle";
@@ -62,6 +64,7 @@ const Dialog = forwardRef<
   const controls = useDragControls();
   const updateDialog = useDialogStore((state) => state.updateDialog);
   const selectDialog = useDialogStore((state) => state.selectDialog);
+  const addDialog = useDialogStore((state) => state.addDialog);
   const [windowWidth, setWindowWidth] = useState<number>(1200);
   const x = useMotionValue(dialog.x);
   const y = useMotionValue(dialog.y);
@@ -216,10 +219,13 @@ const Dialog = forwardRef<
   const updateTabOrder = (fromIndex: number, shiftInOrder: number) => {
     const tabs = [...dialog.tabs];
 
-    let toIndex = Math.max(
-      0,
-      Math.min(tabs.length - 1, fromIndex + shiftInOrder)
-    );
+    console.log(tabs);
+
+    if (tabs.length <= 1) {
+      return;
+    }
+
+    let toIndex = Math.max(0, Math.min(tabs.length, fromIndex + shiftInOrder));
 
     if (fromIndex === toIndex) {
       return;
@@ -240,6 +246,34 @@ const Dialog = forwardRef<
       tabs: newTabs,
     });
   };
+
+  const separateTabToNewDialog = (tab: Itab) => {
+    const newTabs = [...dialog.tabs];
+    const idx = newTabs.findIndex((t) => t.id === tab.id);
+    newTabs.splice(idx, 1);
+
+    updateDialog({
+      ...dialog,
+      tabs: newTabs,
+    });
+
+    addDialog({
+      id: uuidv4(),
+      x: x.get(),
+      y: y.get(),
+      zIndex: 100,
+      width: 400,
+      height: 200,
+      selected: true,
+      tabs: [{ ...tab, separable: false }],
+    });
+  };
+
+  // useEffect(() => {
+  //   if (dialog.selected) {
+  //     controls.start();
+  //   }
+  // }, [dialog.selected]);
 
   return (
     <motion.div
@@ -290,17 +324,18 @@ const Dialog = forwardRef<
             .map((tab) => (
               <Tab
                 key={tab.id}
-                id={tab.id}
-                order={tab.order}
-                title={tab.title}
+                tab={tab}
+                isDraggable={dialog.tabs.length > 1}
                 updateTabOrder={updateTabOrder}
+                separateTabToNewDialog={separateTabToNewDialog}
               />
             ))}
         </motion.span>
       </motion.div>
       <div className="h-full w-full bg-orange-300">body</div>
-      {handles.map((handle) => (
+      {handles.map((handle, idx) => (
         <DialogHandle
+          key={idx}
           direction={handle as ExpandDirection}
           handleDialogResize={handleDialogResize}
           handleHandleDragEnd={handleHandleDragEnd}

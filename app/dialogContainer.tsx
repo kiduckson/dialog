@@ -29,6 +29,8 @@ export default function DialogContainer() {
     selectDialog(id);
   };
 
+  console.log(dialogs);
+
   return (
     <div
       className={`flex relative h-dvh w-full bg-muted border`}
