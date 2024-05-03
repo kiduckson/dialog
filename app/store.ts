@@ -23,6 +23,8 @@ type State = {
   dialogs: IDialog[];
   tabs: Itab[];
   length: number;
+  activeDialog: string;
+  activeTab: string;
 };
 
 type Action = {
@@ -34,6 +36,8 @@ type Action = {
 export const useDialogStore = create<State & Action>()(
   immer((set) => ({
     length: 0,
+    activeDialog: "",
+    activeTab: "",
     tabs: [
       {
         id: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
@@ -106,8 +110,11 @@ export const useDialogStore = create<State & Action>()(
           ...state.dialogs.slice(id + 1),
         ];
       }),
+    setActiveDialog: (id: string) => set((state) => {}),
+    setActiveTab: (id: string) => set((state) => {}),
     selectDialog: (id: string | undefined) =>
       set((state) => {
+        state.activeDialog = id ?? "";
         state.dialogs = [
           ...state.dialogs.map((dialog) => {
             if (id === dialog.id) {
