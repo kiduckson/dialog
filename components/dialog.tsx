@@ -247,8 +247,10 @@ const Dialog = forwardRef<
     });
   };
 
+  // drag tab to y to create a new dialog
   const separateTabToNewDialog = (tab: Itab) => {
     const newTabs = [...dialog.tabs];
+    const dialogId = uuidv4();
     const idx = newTabs.findIndex((t) => t.id === tab.id);
     newTabs.splice(idx, 1);
 
@@ -258,7 +260,7 @@ const Dialog = forwardRef<
     });
 
     addDialog({
-      id: uuidv4(),
+      id: dialogId,
       x: x.get(),
       y: y.get(),
       zIndex: 100,
@@ -267,6 +269,12 @@ const Dialog = forwardRef<
       selected: true,
       tabs: [{ ...tab, separable: false }],
     });
+    const dialogElement = document.querySelector(
+      `[data-dialog-id="${dialogId}"]`
+    );
+    console.log(dialogElement);
+
+    console.log(`[data-dialog-id="${dialogId}"]`);
   };
 
   // useEffect(() => {
