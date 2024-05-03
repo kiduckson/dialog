@@ -268,12 +268,15 @@ const Dialog = ({
   };
 
   const handleTabMerge = () => {
-    x.get();
-    y.get();
-    dialogs.forEach((dialog) => {
-      dialog.y + 32;
-      const xThresh = dialog.x + dialog.width;
-    });
+    const currX = x.get();
+    const currY = y.get();
+    const yThrest = dialog.y + 32;
+    for (const dialog of dialogs) {
+      const inYRange = dialog.y < currY && yThrest > currY;
+      if (dialog.y < currY && yThrest > currY) {
+      }
+      // const xThresh = dialog.x + dialog.width;
+    }
     /**
      * 0. dragged dialog position
      * 1. target dialog x, y, width.
