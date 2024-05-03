@@ -29,8 +29,6 @@ export default function DialogContainer() {
     selectDialog(id);
   };
 
-  console.log(dialogs);
-
   return (
     <div
       className={`flex relative h-dvh w-full bg-muted border`}
@@ -38,12 +36,7 @@ export default function DialogContainer() {
       onClick={handleClick}
     >
       {dialogs.map((dialog) => (
-        <Dialog
-          ref={ref}
-          dialog={dialog}
-          key={dialog.id}
-          handleClick={handleClick}
-        />
+        <Dialog dialog={dialog} key={dialog.id} handleClick={handleClick} />
       ))}
     </div>
   );

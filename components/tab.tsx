@@ -1,11 +1,11 @@
-import { useDialogStore } from "@/app/store";
+import { useRef } from "react";
+import { Itab, useDialogStore } from "@/app/store";
 import {
   PanInfo,
   motion,
   useMotionValue,
   useMotionValueEvent,
 } from "framer-motion";
-import React, { useRef } from "react";
 
 /**
  * TODO:
@@ -14,12 +14,19 @@ import React, { useRef } from "react";
  * if
  */
 
+interface ITabProps {
+  tab: Itab;
+  updateTabOrder: (fromIndex: number, shiftInOrder: number) => void;
+  isDraggable: boolean;
+  separateTabToNewDialog: (tab: Itab, x: number, y: number) => void;
+}
+
 export default function Tab({
   tab,
   updateTabOrder,
   isDraggable,
   separateTabToNewDialog,
-}) {
+}: ITabProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -30,8 +37,9 @@ export default function Tab({
   });
 
   const handleYDrag = (e: any, info: PanInfo) => {
-    if (Math.abs(info.offset.y) >= 40) {
-      separateTabToNewDialog(tab);
+    if (!isDraggable) return;
+    if (Math.abs(info.offset.y) >= 50 && ref.current) {
+      separateTabToNewDialog(tab, info.point.x, info.point.y);
     }
   };
 
@@ -44,9 +52,10 @@ export default function Tab({
         x,
         y,
       }}
-      layoutId={tab.order}
       layout
+      layoutId={tab.id}
       onPan={handleYDrag}
+      onPanEnd={handleYDrag}
       dragElastic={false}
       dragMomentum={false}
       dragSnapToOrigin

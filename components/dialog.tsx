@@ -8,7 +8,14 @@ import {
   useMotionValue,
   useMotionValueEvent,
 } from "framer-motion";
-import { useEffect, useState, useMemo, forwardRef, DragEvent } from "react";
+import {
+  useEffect,
+  useState,
+  useMemo,
+  forwardRef,
+  DragEvent,
+  useRef,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
 
 import { IDialog, Itab, useDialogStore } from "@/app/store";
@@ -57,11 +64,15 @@ export const handleVariant = cva("absolute hover:bg-card/20", {
   },
 });
 
-const Dialog = forwardRef<
-  HTMLDivElement,
-  { dialog: IDialog; handleClick: any }
->(({ dialog }, ref) => {
+const Dialog = ({
+  dialog,
+  handleClick,
+}: {
+  dialog: IDialog;
+  handleClick: any;
+}) => {
   const controls = useDragControls();
+  const dialogRef = useRef<HTMLDivElement>(null);
   const updateDialog = useDialogStore((state) => state.updateDialog);
   const selectDialog = useDialogStore((state) => state.selectDialog);
   const addDialog = useDialogStore((state) => state.addDialog);
@@ -121,22 +132,6 @@ const Dialog = forwardRef<
 
   const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     console.log("double clicked");
-  };
-
-  const handleClick = (
-    e: React.MouseEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent
-  ) => {
-    e.stopPropagation();
-    let el: HTMLElement | null = e.target as HTMLElement;
-    let id;
-    while (el) {
-      if (el?.dataset.dialogId) {
-        id = el.dataset.dialogId;
-        break;
-      }
-      el = el.parentElement;
-    }
-    selectDialog(id);
   };
 
   const dragConstraints = {
@@ -248,7 +243,7 @@ const Dialog = forwardRef<
   };
 
   // drag tab to y to create a new dialog
-  const separateTabToNewDialog = (tab: Itab) => {
+  const separateTabToNewDialog = (tab: Itab, ax: number, ay: number) => {
     const newTabs = [...dialog.tabs];
     const dialogId = uuidv4();
     const idx = newTabs.findIndex((t) => t.id === tab.id);
@@ -261,27 +256,16 @@ const Dialog = forwardRef<
 
     addDialog({
       id: dialogId,
-      x: x.get(),
-      y: y.get(),
+      x: ax,
+      y: ay,
       zIndex: 100,
       width: 400,
       height: 200,
       selected: true,
+      isNew: true,
       tabs: [{ ...tab, separable: false }],
     });
-    const dialogElement = document.querySelector(
-      `[data-dialog-id="${dialogId}"]`
-    );
-    console.log(dialogElement);
-
-    console.log(`[data-dialog-id="${dialogId}"]`);
   };
-
-  // useEffect(() => {
-  //   if (dialog.selected) {
-  //     controls.start();
-  //   }
-  // }, [dialog.selected]);
 
   return (
     <motion.div
@@ -318,13 +302,17 @@ const Dialog = forwardRef<
       onClick={handleClick}
       onDragStart={handleClick}
       data-dialog-id={dialog.id}
+      ref={dialogRef}
     >
       <motion.div
         layout
-        className={`flex items-center relative justify-between h-8 border-b px-2 cursor-pointer select-none bg-neutral-700`}
+        className={`dialog-handle flex items-center relative justify-between h-8 border-b px-2 cursor-pointer select-none bg-neutral-700`}
         tabIndex={-1}
         onDoubleClick={handleDoubleClick}
-        onPointerDown={(event) => controls.start(event)}
+        onPointerDown={(event) => {
+          controls.start(event);
+        }}
+        style={{ touchAction: "none" }}
       >
         <motion.span layout className="flex gap-1 max-w-[80%]">
           {[...dialog.tabs]
@@ -351,6 +339,6 @@ const Dialog = forwardRef<
       ))}
     </motion.div>
   );
-});
+};
 
 export default Dialog;
