@@ -30,6 +30,7 @@ type State = {
 
 type Action = {
   addDialog: (dialog: IDialog) => void;
+  removeDialog: (id: string) => void;
   updateDialog: (newDialog: IDialog) => void;
   selectDialog: (id: string | undefined) => void;
 };
@@ -100,6 +101,14 @@ export const useDialogStore = create<State & Action>()(
     addDialog: (dialog: IDialog) =>
       set((state) => {
         state.dialogs.push(dialog);
+      }),
+    removeDialog: (id: string) =>
+      set((state) => {
+        const idx = state.dialogs.findIndex((dialog) => dialog.id === id);
+        state.dialogs = [
+          ...state.dialogs.slice(0, idx),
+          ...state.dialogs.slice(idx + 1),
+        ];
       }),
     updateDialog: (newDialog: IDialog) =>
       set((state) => {

@@ -76,6 +76,7 @@ const Dialog = ({
   const updateDialog = useDialogStore((state) => state.updateDialog);
   const dialogs = useDialogStore((state) => state.dialogs);
   const addDialog = useDialogStore((state) => state.addDialog);
+  const removeDialog = useDialogStore((state) => state.removeDialog);
   const [windowWidth, setWindowWidth] = useState<number>(1200);
   const x = useMotionValue(dialog.x);
   const y = useMotionValue(dialog.y);
@@ -265,27 +266,45 @@ const Dialog = ({
       isNew: true,
       tabs: [{ ...tab, separable: false }],
     });
+    const moveEvent = new MouseEvent("mousemove", {
+      clientX: ax,
+      clientY: ay,
+      bubbles: true,
+    });
   };
+
+  useMotionValueEvent(x, "change", () => {
+    handleTabMerge();
+  });
+
+  useMotionValueEvent(y, "change", () => {
+    handleTabMerge();
+  });
 
   const handleTabMerge = () => {
     const currX = x.get();
     const currY = y.get();
-    const yThrest = dialog.y + 32;
-    for (const dialog of dialogs) {
-      const inYRange = dialog.y < currY && yThrest > currY;
-      if (dialog.y < currY && yThrest > currY) {
+    for (const dia of dialogs) {
+      if (dia.id === dialog.id) {
+        continue;
       }
-      // const xThresh = dialog.x + dialog.width;
+      const yThrest = dia.y + 32;
+      const xThresh = dia.x + dia.width;
+      const inXRange = dia.x < currX && xThresh > currX;
+      const inYRange = dia.y < currY && yThrest > currY;
+      if (inYRange && inXRange) {
+        // 1. target dialog
+        const newDialog = {
+          ...dia,
+          tabs: [...dia.tabs, ...dialog.tabs],
+        };
+        // update dialog
+        updateDialog(newDialog);
+        // remove current dialog
+        removeDialog(dialog.id);
+        break;
+      }
     }
-    /**
-     * 0. dragged dialog position
-     * 1. target dialog x, y, width.
-     *  - calculate the top nav area
-     *  - if the
-     * 2. if the dialog has more than one tap
-     *    if not do nothing
-     * 3.
-     */
   };
 
   return (

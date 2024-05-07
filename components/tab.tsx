@@ -53,7 +53,6 @@ export default function Tab({
         y,
       }}
       layout
-      layoutId={tab.id}
       onPan={handleYDrag}
       onPanEnd={handleYDrag}
       dragElastic={false}
