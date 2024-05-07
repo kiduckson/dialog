@@ -5,27 +5,22 @@ export interface IDialog {
   id: string;
   x: number;
   y: number;
-  zIndex: number;
   width: number;
   height: number;
-  selected: boolean;
-  isNew: boolean;
-  tabs: Itab[];
+  activeTab: string;
+  tabs: string[];
 }
 export interface Itab {
   id: string;
   title: string;
-  active: boolean;
-  order: number;
-  separable: boolean;
 }
 
 type State = {
-  dialogs: IDialog[];
-  tabs: Itab[];
+  dialogs: Record<string, IDialog>;
+  tabs: Record<string, Itab>;
   length: number;
   activeDialog: string;
-  activeTab: string;
+  dialogOrder: string[];
 };
 
 type Action = {
@@ -39,105 +34,71 @@ export const useDialogStore = create<State & Action>()(
   immer((set) => ({
     length: 0,
     activeDialog: "",
-    activeTab: "",
-    tabs: [
-      {
+    dialogOrder: ["fa077d41-9786-457d-bf5a-2a85a4d9bbbb"],
+    tabs: {
+      "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b": {
         id: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
         title: "tab1",
-        active: true,
-        order: 0,
-        separable: true,
       },
-      {
+      "cce836b9-054f-4dec-ba99-34f35395e93e": {
         id: "cce836b9-054f-4dec-ba99-34f35395e93e",
         title: "tab2",
-        active: false,
-        order: 1,
-        separable: true,
       },
-      {
+      "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
         title: "tab3",
-        active: false,
-        order: 2,
-        separable: true,
       },
-    ],
-    dialogs: [
-      {
+    },
+    dialogs: {
+      "fa077d41-9786-457d-bf5a-2a85a4d9bbbb": {
         id: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
         x: 0,
         y: 0,
-        zIndex: 0,
         width: 400,
         height: 200,
-        selected: false,
-        isNew: false,
+        activeTab: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
         tabs: [
-          {
-            id: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
-            title: "tab1",
-            active: true,
-            order: 0,
-            separable: true,
-          },
-          {
-            id: "cce836b9-054f-4dec-ba99-34f35395e93e",
-            title: "tab2",
-            active: false,
-            order: 1,
-            separable: true,
-          },
-          {
-            id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
-            title: "tab3",
-            active: false,
-            order: 2,
-            separable: true,
-          },
+          "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
+          "cce836b9-054f-4dec-ba99-34f35395e93e",
+          "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
         ],
       },
-    ] as IDialog[],
+    },
     addDialog: (dialog: IDialog) =>
       set((state) => {
-        state.dialogs.push(dialog);
+        if (dialog.id in state.dialogs) {
+          return;
+        }
+        state.dialogs[dialog.id] = dialog;
       }),
     removeDialog: (id: string) =>
       set((state) => {
-        const idx = state.dialogs.findIndex((dialog) => dialog.id === id);
-        state.dialogs = [
-          ...state.dialogs.slice(0, idx),
-          ...state.dialogs.slice(idx + 1),
-        ];
+        if (!(id in state.dialogs)) {
+          console.log(`No dialog with id ${id} found.`);
+          return;
+        }
+        // Destructure to exclude the dialog with the specified id
+        const { [id]: removedDialog, ...remainingDialogs } = state.dialogs;
+        state.dialogOrder = state.dialogOrder.filter((order) => order !== id);
+        state.dialogs = remainingDialogs;
       }),
     updateDialog: (newDialog: IDialog) =>
       set((state) => {
-        const id = state.dialogs.findIndex(
-          (dialog) => dialog.id === newDialog.id
-        );
-        state.dialogs = [
-          ...state.dialogs.slice(0, id),
-          newDialog,
-          ...state.dialogs.slice(id + 1),
-        ];
+        state.dialogs[newDialog.id] = { ...newDialog };
       }),
-    setActiveDialog: (id: string) => set((state) => {}),
-    setActiveTab: (id: string) => set((state) => {}),
+    setActiveDialog: (id: string) =>
+      set((state) => {
+        state.activeDialog = id;
+      }),
     selectDialog: (id: string | undefined) =>
       set((state) => {
         state.activeDialog = id ?? "";
-        state.dialogs = [
-          ...state.dialogs.map((dialog) => {
-            if (id === dialog.id) {
-              state.length += 1;
-            }
-
-            return {
-              ...dialog,
-              selected: id === dialog.id,
-              zIndex: id === dialog.id ? state.length : dialog.zIndex,
-            };
-          }),
+        if (!id) {
+          return;
+        }
+        state.dialogOrder = [
+          ...state.dialogOrder.filter((order) => order !== id),
+          id,
         ];
       }),
   }))

@@ -67,17 +67,23 @@ export const handleVariant = cva("absolute hover:bg-card/20", {
 const Dialog = ({
   dialog,
   handleClick,
+  selected,
+  handleTabMerge,
 }: {
   dialog: IDialog;
   handleClick: any;
+  selected: boolean;
+  handleTabMerge: (x: number, y: number, id: string) => void;
 }) => {
   const controls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const tabs = useDialogStore((state) => state.tabs);
   const updateDialog = useDialogStore((state) => state.updateDialog);
-  const dialogs = useDialogStore((state) => state.dialogs);
+  const selectDialog = useDialogStore((state) => state.selectDialog);
+  const dialogOrder = useDialogStore((state) => state.dialogOrder);
   const addDialog = useDialogStore((state) => state.addDialog);
-  const removeDialog = useDialogStore((state) => state.removeDialog);
   const [windowWidth, setWindowWidth] = useState<number>(1200);
+
   const x = useMotionValue(dialog.x);
   const y = useMotionValue(dialog.y);
   const width = useMotionValue(dialog.width);
@@ -214,12 +220,7 @@ const Dialog = ({
 
   const updateTabOrder = (fromIndex: number, shiftInOrder: number) => {
     const tabs = [...dialog.tabs];
-
-    console.log(tabs);
-
-    if (tabs.length <= 1) {
-      return;
-    }
+    if (tabs.length < 2) return;
 
     let toIndex = Math.max(0, Math.min(tabs.length, fromIndex + shiftInOrder));
 
@@ -235,83 +236,69 @@ const Dialog = ({
 
     tabs.splice(toIndex, 0, newTab);
 
-    const newTabs = tabs.map((tab, idx) => ({ ...tab, order: idx }));
-
     updateDialog({
       ...dialog,
-      tabs: newTabs,
+      tabs,
     });
   };
 
   // drag tab to y to create a new dialog
-  const separateTabToNewDialog = (tab: Itab, ax: number, ay: number) => {
-    const newTabs = [...dialog.tabs];
+  const separateTabToNewDialog = (id: string, ax: number, ay: number) => {
     const dialogId = uuidv4();
-    const idx = newTabs.findIndex((t) => t.id === tab.id);
-    newTabs.splice(idx, 1);
-
     updateDialog({
       ...dialog,
-      tabs: newTabs,
+      tabs: dialog.tabs.filter((tab) => tab !== id),
     });
 
     addDialog({
       id: dialogId,
-      x: ax,
-      y: ay,
-      zIndex: 100,
-      width: 400,
-      height: 200,
-      selected: true,
-      isNew: true,
-      tabs: [{ ...tab, separable: false }],
+      x: dialog.x + ax,
+      y: dialog.y + ay,
+      width: dialog.width,
+      height: dialog.height,
+      activeTab: id,
+      tabs: [id],
     });
-    const moveEvent = new MouseEvent("mousemove", {
-      clientX: ax,
-      clientY: ay,
-      bubbles: true,
+    selectDialog(dialogId);
+  };
+
+  const [isTabMerable, setIsTabMergeable] = useState(false);
+  const [isDragFromTab, setIsDragFromTab] = useState(false);
+
+  useMotionValueEvent(x, "change", (latest) => {
+    if (isTabMerable && isDragFromTab)
+      handleTabMerge(latest, y.get(), dialog.id);
+  });
+
+  useMotionValueEvent(y, "change", (latest) => {
+    if (isTabMerable && isDragFromTab)
+      handleTabMerge(x.get(), latest, dialog.id);
+  });
+
+  const updateActiveTab = (id: string) => {
+    updateDialog({
+      ...dialog,
+      activeTab: id,
     });
   };
 
-  useMotionValueEvent(x, "change", () => {
-    handleTabMerge();
-  });
+  const activeTab = dialog.tabs.includes(dialog.activeTab)
+    ? dialog.activeTab
+    : dialog.tabs[0];
 
-  useMotionValueEvent(y, "change", () => {
-    handleTabMerge();
-  });
-
-  const handleTabMerge = () => {
-    const currX = x.get();
-    const currY = y.get();
-    for (const dia of dialogs) {
-      if (dia.id === dialog.id) {
-        continue;
-      }
-      const yThrest = dia.y + 32;
-      const xThresh = dia.x + dia.width;
-      const inXRange = dia.x < currX && xThresh > currX;
-      const inYRange = dia.y < currY && yThrest > currY;
-      if (inYRange && inXRange) {
-        // 1. target dialog
-        const newDialog = {
-          ...dia,
-          tabs: [...dia.tabs, ...dialog.tabs],
-        };
-        // update dialog
-        updateDialog(newDialog);
-        // remove current dialog
-        removeDialog(dialog.id);
-        break;
-      }
-    }
+  const handleTabDrag = (flag: boolean) => {
+    setIsDragFromTab(flag);
   };
+
+  useEffect(() => {
+    setIsTabMergeable(dialog.tabs.length === 1);
+  }, [dialog.tabs]);
 
   return (
     <motion.div
       className={cn(
         "absolute top-0 left-0 flex flex-col bg-neutral-400 border  border-neutral-500 shadow-neutral-800",
-        dialog.selected ? "shadow-lg border-white" : "shadow-none"
+        selected ? "shadow-lg border-white" : "shadow-none"
       )}
       style={{
         x,
@@ -331,7 +318,7 @@ const Dialog = ({
         y: dialog.y,
         width: dialog.width,
         height: dialog.height,
-        zIndex: dialog.zIndex,
+        zIndex: dialogOrder.findIndex((order) => order === dialog.id) + 1,
       }}
       drag
       dragConstraints={dragConstraints}
@@ -355,20 +342,25 @@ const Dialog = ({
         style={{ touchAction: "none" }}
       >
         <motion.span layout className="flex gap-1 max-w-[80%]">
-          {[...dialog.tabs]
-            .sort((a, b) => a.order - b.order)
-            .map((tab) => (
-              <Tab
-                key={tab.id}
-                tab={tab}
-                isDraggable={dialog.tabs.length > 1}
-                updateTabOrder={updateTabOrder}
-                separateTabToNewDialog={separateTabToNewDialog}
-              />
-            ))}
+          {dialog.tabs.map((tabId, idx) => (
+            <Tab
+              key={tabId}
+              idx={idx}
+              tab={tabs[tabId]}
+              isActive={activeTab === tabId}
+              isDraggable={dialog.tabs.length > 1}
+              updateTabOrder={updateTabOrder}
+              separateTabToNewDialog={separateTabToNewDialog}
+              updateActiveTab={updateActiveTab}
+              handleTabDrag={handleTabDrag}
+            />
+          ))}
         </motion.span>
       </motion.div>
-      <div className="h-full w-full bg-orange-300">body</div>
+      <div className="h-full w-full bg-zinc-700">
+        <div>{dialog.id}</div>
+        <div>{dialog.activeTab}</div>
+      </div>
       {handles.map((handle, idx) => (
         <DialogHandle
           key={idx}
