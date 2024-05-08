@@ -58,8 +58,7 @@ interface IDialogProps {
     dialogId: string,
     tabId: string,
     ax: number,
-    ay: number,
-    e: PointerEvent
+    ay: number
   ) => void;
 }
 
@@ -118,9 +117,6 @@ const Dialog = ({
     });
   });
 
-  /**
-   * width
-   */
   useMotionValueEvent(width, "change", (latest) => {
     // x.set(Math.min(x.get(), rightConstraint));
   });
@@ -207,6 +203,7 @@ const Dialog = ({
       width: width.get(),
       height: height.get(),
     });
+    selectDialog(dialog.id);
   };
 
   const handles = Object.values(ExpandDirection).slice(
@@ -236,8 +233,6 @@ const Dialog = ({
       tabs,
     });
   };
-
-  // drag tab to y to create a new dialog
 
   const [isTabMerable, setIsTabMergeable] = useState(false);
   const [isDragFromTab, setIsDragFromTab] = useState(false);

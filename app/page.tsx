@@ -1,6 +1,6 @@
 import { Book, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import DialogContainer from "./dialogContainer";
+import DialogContainer from "@/components/windowDialog/dialogContainer";
 
 export default function Home() {
   return (

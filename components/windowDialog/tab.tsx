@@ -35,8 +35,7 @@ interface ITabProps {
     dialogId: string,
     tabId: string,
     x: number,
-    y: number,
-    e: PointerEvent
+    y: number
   ) => void;
   updateActiveTab: (id: string) => void;
   handleTabDrag: (flag: boolean) => void;
@@ -69,8 +68,7 @@ export default function Tab({
         dialogId,
         tab.id,
         info.offset.x + ref.current?.clientWidth * idx,
-        info.offset.y,
-        e
+        info.offset.y
       );
     }
   };

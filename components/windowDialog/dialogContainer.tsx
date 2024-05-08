@@ -2,14 +2,20 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { useRef, useEffect, useState } from "react";
-import { IDialog, useDialogStore } from "./store";
-import Dialog from "@/components/dialog";
+import { IDialog, useDialogStore } from "../../app/store";
+import Dialog from "./dialog";
 
 export type IHandleClick =
   | React.MouseEvent<HTMLDivElement>
   | MouseEvent
   | TouchEvent
   | PointerEvent;
+
+/**
+ * TODO:
+ * 1. 드래그 끝나고 이어지도록 연결
+ * @returns
+ */
 
 export default function DialogContainer() {
   const ref = useRef<HTMLDivElement>(null);
@@ -56,7 +62,7 @@ export default function DialogContainer() {
         updateDialog(newDialog);
         selectDialog(newDialog.id);
         removeDialog(id);
-        // setMerged(true);
+        setMerged(true);
         break;
       }
     }
@@ -66,8 +72,7 @@ export default function DialogContainer() {
     dialogId: string,
     tabId: string,
     ax: number,
-    ay: number,
-    e: PointerEvent
+    ay: number
   ) => {
     const newDialogId = uuidv4();
     const prevDialog = dialogs[dialogId];
@@ -87,9 +92,6 @@ export default function DialogContainer() {
     });
     selectDialog(newDialogId);
     setSeparated(true);
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    e.stopPropagation();
   };
 
   useEffect(() => {
@@ -99,15 +101,6 @@ export default function DialogContainer() {
       );
       setSeparated(false);
       setMerged(false);
-      // if (selectedDialog) {
-      //   const pointerEvent = new PointerEvent("pointerdown", {
-      //     bubbles: true,
-      //     cancelable: true,
-      //     pointerType: "mouse",
-      //   });
-      //   const success = selectedDialog.dispatchEvent(pointerEvent);
-      //   console.log("dispatch to", selectedDialog, "success", success);
-      // }
     }
   }, [ref, activeDialog, dialogs[activeDialog]?.activeTab, merged, separated]);
 
