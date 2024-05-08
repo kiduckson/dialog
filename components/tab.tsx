@@ -9,13 +9,6 @@ import {
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
-/**
- * TODO:
- * 1. tab out of the window
- * x threshhold =
- * if
- */
-
 export const tabVariant = cva(
   "rounded-t-lg corner px-4 w-24 min-w-12 truncate",
   {
@@ -34,10 +27,17 @@ export const tabVariant = cva(
 interface ITabProps {
   tab: Itab;
   idx: number;
+  dialogId: string;
   updateTabOrder: (fromIndex: number, shiftInOrder: number) => void;
   isDraggable: boolean;
   isActive: boolean;
-  separateTabToNewDialog: (id: string, x: number, y: number) => void;
+  separateTabToNewDialog: (
+    dialogId: string,
+    tabId: string,
+    x: number,
+    y: number,
+    e: PointerEvent
+  ) => void;
   updateActiveTab: (id: string) => void;
   handleTabDrag: (flag: boolean) => void;
 }
@@ -45,6 +45,7 @@ interface ITabProps {
 export default function Tab({
   tab,
   idx,
+  dialogId,
   isDraggable,
   isActive,
   updateTabOrder,
@@ -61,13 +62,15 @@ export default function Tab({
     updateTabOrder(idx, shiftInOrder);
   });
 
-  const handleYDrag = (info: PanInfo) => {
+  const handleYDrag = (e: PointerEvent, info: PanInfo) => {
     if (!isDraggable) return;
     if (Math.abs(info.offset.y) >= 50 && ref.current) {
       separateTabToNewDialog(
+        dialogId,
         tab.id,
         info.offset.x + ref.current?.clientWidth * idx,
-        info.offset.y
+        info.offset.y,
+        e
       );
     }
   };
@@ -86,15 +89,15 @@ export default function Tab({
       }}
       layout
       onClick={() => updateActiveTab(tab.id)}
-      onPanStart={() => updateActiveTab(tab.id)}
+      onPanStart={(e) => {
+        updateActiveTab(tab.id);
+      }}
       onPan={(e, info) => {
-        console.log("drag");
-
-        handleYDrag(info);
+        handleYDrag(e, info);
         setTabDrag(true);
       }}
       onPanEnd={(e, info) => {
-        handleYDrag(info);
+        handleYDrag(e, info);
         setTabDrag(false);
       }}
       dragElastic={false}

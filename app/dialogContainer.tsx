@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useEffect } from "react";
-import { useDialogStore } from "./store";
+import { v4 as uuidv4 } from "uuid";
+import { useRef, useEffect, useState } from "react";
+import { IDialog, useDialogStore } from "./store";
 import Dialog from "@/components/dialog";
 
 export type IHandleClick =
@@ -18,8 +19,10 @@ export default function DialogContainer() {
   const activeDialog = useDialogStore((state) => state.activeDialog);
   const updateDialog = useDialogStore((state) => state.updateDialog);
   const removeDialog = useDialogStore((state) => state.removeDialog);
+  const addDialog = useDialogStore((state) => state.addDialog);
 
-  console.log("active Dialog", activeDialog);
+  const [merged, setMerged] = useState(false);
+  const [separated, setSeparated] = useState(false);
 
   const handleClick = (e: IHandleClick) => {
     e.stopPropagation();
@@ -53,18 +56,60 @@ export default function DialogContainer() {
         updateDialog(newDialog);
         selectDialog(newDialog.id);
         removeDialog(id);
+        // setMerged(true);
         break;
       }
     }
   };
 
+  const separateTabToNewDialog = (
+    dialogId: string,
+    tabId: string,
+    ax: number,
+    ay: number,
+    e: PointerEvent
+  ) => {
+    const newDialogId = uuidv4();
+    const prevDialog = dialogs[dialogId];
+    updateDialog({
+      ...prevDialog,
+      tabs: prevDialog.tabs.filter((tab) => tab !== tabId),
+    });
+
+    addDialog({
+      id: newDialogId,
+      x: prevDialog.x + ax,
+      y: prevDialog.y + ay,
+      width: prevDialog.width,
+      height: prevDialog.height,
+      activeTab: tabId,
+      tabs: [tabId],
+    });
+    selectDialog(newDialogId);
+    setSeparated(true);
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    e.stopPropagation();
+  };
+
   useEffect(() => {
-    if (ref && activeDialog) {
-      const selectedTab = ref.current?.querySelector(
+    if (ref && activeDialog && (merged || separated)) {
+      const selectedDialog = ref.current?.querySelector(
         `[data-tab-id="${dialogs[activeDialog].activeTab}"]`
       );
+      setSeparated(false);
+      setMerged(false);
+      // if (selectedDialog) {
+      //   const pointerEvent = new PointerEvent("pointerdown", {
+      //     bubbles: true,
+      //     cancelable: true,
+      //     pointerType: "mouse",
+      //   });
+      //   const success = selectedDialog.dispatchEvent(pointerEvent);
+      //   console.log("dispatch to", selectedDialog, "success", success);
+      // }
     }
-  }, [ref, activeDialog, dialogs[activeDialog]?.activeTab]);
+  }, [ref, activeDialog, dialogs[activeDialog]?.activeTab, merged, separated]);
 
   return (
     <div
@@ -79,6 +124,7 @@ export default function DialogContainer() {
           key={dialogId}
           handleClick={handleClick}
           handleTabMerge={handleTabMerge}
+          separateTabToNewDialog={separateTabToNewDialog}
         />
       ))}
     </div>

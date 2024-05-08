@@ -3,33 +3,18 @@
 import {
   PanInfo,
   motion,
-  motionValue,
   useDragControls,
   useMotionValue,
   useMotionValueEvent,
 } from "framer-motion";
-import {
-  useEffect,
-  useState,
-  useMemo,
-  forwardRef,
-  DragEvent,
-  useRef,
-} from "react";
-import { v4 as uuidv4 } from "uuid";
+import { useEffect, useState, useMemo, useRef } from "react";
 
-import { IDialog, Itab, useDialogStore } from "@/app/store";
+import { IDialog, useDialogStore } from "@/app/store";
 import { cn } from "@/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
+import { cva } from "class-variance-authority";
 import DialogHandle from "./dialogHandle";
-import { IHandleClick } from "@/app/dialogContainer";
 import Tab from "./tab";
 
-enum EnlargedState {
-  shrink,
-  mid,
-  large,
-}
 export enum ExpandDirection {
   top,
   bottom,
@@ -64,17 +49,27 @@ export const handleVariant = cva("absolute hover:bg-card/20", {
   },
 });
 
+interface IDialogProps {
+  dialog: IDialog;
+  handleClick: any;
+  selected: boolean;
+  handleTabMerge: (x: number, y: number, id: string) => void;
+  separateTabToNewDialog: (
+    dialogId: string,
+    tabId: string,
+    ax: number,
+    ay: number,
+    e: PointerEvent
+  ) => void;
+}
+
 const Dialog = ({
   dialog,
   handleClick,
   selected,
   handleTabMerge,
-}: {
-  dialog: IDialog;
-  handleClick: any;
-  selected: boolean;
-  handleTabMerge: (x: number, y: number, id: string) => void;
-}) => {
+  separateTabToNewDialog,
+}: IDialogProps) => {
   const controls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
   const tabs = useDialogStore((state) => state.tabs);
@@ -243,24 +238,6 @@ const Dialog = ({
   };
 
   // drag tab to y to create a new dialog
-  const separateTabToNewDialog = (id: string, ax: number, ay: number) => {
-    const dialogId = uuidv4();
-    updateDialog({
-      ...dialog,
-      tabs: dialog.tabs.filter((tab) => tab !== id),
-    });
-
-    addDialog({
-      id: dialogId,
-      x: dialog.x + ax,
-      y: dialog.y + ay,
-      width: dialog.width,
-      height: dialog.height,
-      activeTab: id,
-      tabs: [id],
-    });
-    selectDialog(dialogId);
-  };
 
   const [isTabMerable, setIsTabMergeable] = useState(false);
   const [isDragFromTab, setIsDragFromTab] = useState(false);
@@ -337,6 +314,7 @@ const Dialog = ({
         tabIndex={-1}
         onDoubleClick={handleDoubleClick}
         onPointerDown={(event) => {
+          // console.log("handle pointer down ", event.target);
           controls.start(event);
         }}
         style={{ touchAction: "none" }}
@@ -347,6 +325,7 @@ const Dialog = ({
               key={tabId}
               idx={idx}
               tab={tabs[tabId]}
+              dialogId={dialog.id}
               isActive={activeTab === tabId}
               isDraggable={dialog.tabs.length > 1}
               updateTabOrder={updateTabOrder}
