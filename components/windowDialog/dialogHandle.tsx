@@ -16,6 +16,7 @@ const DialogHandle = forwardRef<
 >(({ direction, handleHandleDragEnd, handleDialogResize }, ref) => {
   return (
     <motion.span
+      ref={ref}
       drag
       dragElastic={false}
       dragMomentum={false}
