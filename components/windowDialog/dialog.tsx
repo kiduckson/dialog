@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { cva } from "class-variance-authority";
 import DialogHandle from "./dialogHandle";
 import Tab from "./tab";
+import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export enum ExpandDirection {
   top,
@@ -53,21 +54,14 @@ interface IDialogProps {
   dialog: IDialog;
   handleClick: any;
   selected: boolean;
-  handleTabMerge: (x: number, y: number, id: string) => void;
-  separateTabToNewDialog: (
-    dialogId: string,
-    tabId: string,
-    ax: number,
-    ay: number
-  ) => void;
+  handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
 }
 
 const Dialog = ({
   dialog,
   handleClick,
   selected,
-  handleTabMerge,
-  separateTabToNewDialog,
+  handleTabBehaviour,
 }: IDialogProps) => {
   const controls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -101,6 +95,7 @@ const Dialog = ({
     [windowWidth, dialog.width]
   );
 
+  // 리사이즈시
   useMotionValueEvent(x, "animationComplete", () => {
     updateDialog({
       ...dialog,
@@ -109,6 +104,7 @@ const Dialog = ({
     });
   });
 
+  // 리사이즈 시
   useMotionValueEvent(y, "animationComplete", () => {
     updateDialog({
       ...dialog,
@@ -117,10 +113,7 @@ const Dialog = ({
     });
   });
 
-  useMotionValueEvent(width, "change", (latest) => {
-    // x.set(Math.min(x.get(), rightConstraint));
-  });
-
+  // 넓이 수정시
   useMotionValueEvent(width, "animationComplete", () => {
     updateDialog({
       ...dialog,
@@ -128,17 +121,18 @@ const Dialog = ({
     });
   });
 
+  // 더블 클릭
   const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     console.log("double clicked");
   };
 
+  // 드래그 제한
   const dragConstraints = {
     top: 0,
     right: rightConstraint,
     left: 0,
   };
-
-  // TODO
+  // 리사이즈 기능
   const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
     const setRight = () => {
       width.set(
@@ -206,10 +200,12 @@ const Dialog = ({
     selectDialog(dialog.id);
   };
 
+  // 핸들
   const handles = Object.values(ExpandDirection).slice(
     Math.floor(Object.keys(ExpandDirection).length / 2)
   );
 
+  // 탭오더 수정
   const updateTabOrder = (fromIndex: number, shiftInOrder: number) => {
     const tabs = [...dialog.tabs];
     if (tabs.length < 2) return;
@@ -234,19 +230,6 @@ const Dialog = ({
     });
   };
 
-  const [isTabMerable, setIsTabMergeable] = useState(false);
-  const [isDragFromTab, setIsDragFromTab] = useState(false);
-
-  useMotionValueEvent(x, "change", (latest) => {
-    if (isTabMerable && isDragFromTab)
-      handleTabMerge(latest, y.get(), dialog.id);
-  });
-
-  useMotionValueEvent(y, "change", (latest) => {
-    if (isTabMerable && isDragFromTab)
-      handleTabMerge(x.get(), latest, dialog.id);
-  });
-
   const updateActiveTab = (id: string) => {
     updateDialog({
       ...dialog,
@@ -257,14 +240,6 @@ const Dialog = ({
   const activeTab = dialog.tabs.includes(dialog.activeTab)
     ? dialog.activeTab
     : dialog.tabs[0];
-
-  const handleTabDrag = (flag: boolean) => {
-    setIsDragFromTab(flag);
-  };
-
-  useEffect(() => {
-    setIsTabMergeable(dialog.tabs.length === 1);
-  }, [dialog.tabs]);
 
   return (
     <motion.div
@@ -309,7 +284,6 @@ const Dialog = ({
         tabIndex={-1}
         onDoubleClick={handleDoubleClick}
         onPointerDown={(event) => {
-          // console.log("handle pointer down ", event.target);
           controls.start(event);
         }}
         style={{ touchAction: "none" }}
@@ -324,9 +298,8 @@ const Dialog = ({
               isActive={activeTab === tabId}
               isDraggable={dialog.tabs.length > 1}
               updateTabOrder={updateTabOrder}
-              separateTabToNewDialog={separateTabToNewDialog}
+              handleTabBehaviour={handleTabBehaviour}
               updateActiveTab={updateActiveTab}
-              handleTabDrag={handleTabDrag}
             />
           ))}
         </motion.span>

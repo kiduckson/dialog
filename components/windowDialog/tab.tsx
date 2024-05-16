@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { Itab } from "@/app/store";
+import { Itab, useDialogStore } from "@/app/store";
 import {
   PanInfo,
   motion,
@@ -8,6 +8,7 @@ import {
 } from "framer-motion";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export const tabVariant = cva(
   "rounded-t-lg corner px-4 w-24 min-w-12 truncate",
@@ -31,15 +32,12 @@ interface ITabProps {
   updateTabOrder: (fromIndex: number, shiftInOrder: number) => void;
   isDraggable: boolean;
   isActive: boolean;
-  separateTabToNewDialog: (
-    dialogId: string,
-    tabId: string,
-    x: number,
-    y: number
-  ) => void;
+
+  handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
   updateActiveTab: (id: string) => void;
-  handleTabDrag: (flag: boolean) => void;
 }
+
+const OFFSET_DIST = 32;
 
 export default function Tab({
   tab,
@@ -48,55 +46,55 @@ export default function Tab({
   isDraggable,
   isActive,
   updateTabOrder,
-  separateTabToNewDialog,
+  handleTabBehaviour,
   updateActiveTab,
-  handleTabDrag,
 }: ITabProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
+  const dialogs = useDialogStore((state) => state.dialogs);
+  const selectDialog = useDialogStore((state) => state.selectDialog);
+  const dialog = dialogs[dialogId];
+  const tabWidth = ref.current?.clientWidth ?? 96;
 
   useMotionValueEvent(x, "change", (latest) => {
-    const shiftInOrder = Math.round(latest / (ref.current?.clientWidth ?? 96));
+    const shiftInOrder = Math.round(latest / tabWidth);
     updateTabOrder(idx, shiftInOrder);
   });
 
-  const handleYDrag = (e: PointerEvent, info: PanInfo) => {
-    if (!isDraggable) return;
-    if (Math.abs(info.offset.y) >= 50 && ref.current) {
-      separateTabToNewDialog(
-        dialogId,
-        tab.id,
-        info.offset.x + ref.current?.clientWidth * idx,
-        info.offset.y
-      );
-    }
-  };
-  const setTabDrag = (flag: boolean) => {
-    handleTabDrag(flag);
+  const selectTab = () => {
+    selectDialog(dialogId);
+    updateActiveTab(tab.id);
   };
 
+  const handleYDrag = (e: PointerEvent, info: PanInfo) => {
+    if (Math.abs(info.offset.y) >= OFFSET_DIST && ref.current) {
+      handleTabBehaviour({
+        dialogId,
+        tabId: tab.id,
+        ax: info.offset.x + tabWidth * idx,
+        ay: info.offset.y,
+        e,
+      });
+    }
+  };
   return (
     <motion.span
       ref={ref}
       className={cn(tabVariant({ variant: isActive ? "active" : "default" }))}
-      drag={isDraggable ? "x" : false}
+      drag={isDraggable}
       style={{
         x,
         y,
       }}
       layout
-      onClick={() => updateActiveTab(tab.id)}
-      onPanStart={(e) => {
-        updateActiveTab(tab.id);
-      }}
+      onClick={selectTab}
+      onPanStart={selectTab}
       onPan={(e, info) => {
         handleYDrag(e, info);
-        setTabDrag(true);
       }}
       onPanEnd={(e, info) => {
         handleYDrag(e, info);
-        setTabDrag(false);
       }}
       dragElastic={false}
       dragMomentum={false}
