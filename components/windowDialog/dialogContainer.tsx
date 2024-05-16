@@ -60,8 +60,6 @@ const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
       ay,
       e,
     }: IhandleTabBehaviourProps) => {
-      // console.log(dialogId, tabId, ax, ay, e.type);
-
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
       const isDividable = prevDialog.tabs.length > 1 && e.type === "pointerup";
@@ -117,7 +115,6 @@ const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
         tabs: [...targetDialog.tabs, tabId],
       };
       updateDialog(newDialog);
-
       const tabsAfterMove = prevDialog.tabs.filter((tab) => tab !== tabId);
       if (tabsAfterMove.length > 0) {
         updateDialog({
