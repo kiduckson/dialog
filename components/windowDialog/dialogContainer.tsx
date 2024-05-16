@@ -24,11 +24,11 @@ export interface IhandleTabBehaviourProps {
 const WINDOW_DIALOG_NAME = "WindowDialog";
 
 type WindowDialogElement = React.ElementRef<"div">;
-interface PortalProps {
+interface WindowDialogProps {
   container?: HTMLElement | null;
 }
 
-const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
+const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
   (props, forwardedRef) => {
     const ref = useRef<HTMLDivElement>(null);
     const dialogs = useDialogStore((state) => state.dialogs);
@@ -38,6 +38,7 @@ const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
     const updateDialog = useDialogStore((state) => state.updateDialog);
     const removeDialog = useDialogStore((state) => state.removeDialog);
     const addDialog = useDialogStore((state) => state.addDialog);
+    const [hoveredId, setHoveredId] = useState<string>("");
 
     const handleClick = (e: IHandleClick) => {
       e.stopPropagation();
@@ -62,7 +63,8 @@ const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
     }: IhandleTabBehaviourProps) => {
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
-      const isDividable = prevDialog.tabs.length > 1 && e.type === "pointerup";
+      const isEnd = e.type === "pointerup";
+      const isDividable = prevDialog.tabs.length > 1 && isEnd;
 
       const calculateX = prevDialog.x + ax;
       const calculateY = prevDialog.y + ay;
@@ -75,9 +77,10 @@ const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
         calculateX,
         calculateY
       );
-
-      if (targetDialog) {
+      setHoveredId(targetDialog?.id || "");
+      if (targetDialog && isEnd) {
         mergeTabsToTargetDialog(targetDialog, dialogId, tabId, prevDialog);
+        setHoveredId("");
       } else if (isDividable) {
         divideTabsIntoNewDialog(
           newDialogId,
@@ -164,6 +167,7 @@ const DialogContainer = forwardRef<WindowDialogElement, PortalProps>(
             key={dialogId}
             handleClick={handleClick}
             handleTabBehaviour={handleTabBehaviour}
+            displayIndicator={hoveredId === dialogId}
           />
         ))}
       </div>

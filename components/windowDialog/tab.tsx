@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Itab, useDialogStore } from "@/app/store";
 import {
   PanInfo,
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export const tabVariant = cva(
-  "rounded-t-lg corner px-4 w-24 min-w-12 truncate",
+  "rounded-t-lg corner px-4 w-24 min-w-12 truncate h-full",
   {
     variants: {
       variant: {
@@ -56,6 +56,7 @@ export default function Tab({
   const selectDialog = useDialogStore((state) => state.selectDialog);
   const dialog = dialogs[dialogId];
   const tabWidth = ref.current?.clientWidth ?? 96;
+  const [yOffsetMet, setYOffsetMet] = useState(false);
 
   useMotionValueEvent(x, "change", (latest) => {
     const shiftInOrder = Math.round(latest / tabWidth);
@@ -68,7 +69,11 @@ export default function Tab({
   };
 
   const handleYDrag = (e: PointerEvent, info: PanInfo) => {
-    if (Math.abs(info.offset.y) >= OFFSET_DIST && ref.current) {
+    setYOffsetMet(Math.abs(info.offset.y) >= OFFSET_DIST);
+    if (!yOffsetMet) {
+      y.set(0);
+    }
+    if (yOffsetMet && ref.current) {
       handleTabBehaviour({
         dialogId,
         tabId: tab.id,
@@ -82,7 +87,7 @@ export default function Tab({
     <motion.span
       ref={ref}
       className={cn(tabVariant({ variant: isActive ? "active" : "default" }))}
-      drag={isDraggable}
+      drag={isDraggable ? (yOffsetMet ? true : "x") : false}
       style={{
         x,
         y,
