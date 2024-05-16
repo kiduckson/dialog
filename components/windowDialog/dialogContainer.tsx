@@ -6,6 +6,7 @@ import { IDialog, useDialogStore } from "../../app/store";
 import { Portal } from "./Portal";
 import Dialog from "./dialog";
 import { PanInfo } from "framer-motion";
+import useDragConstraints from "@/hooks/useDragConstraint";
 
 export type IHandleClick =
   | React.MouseEvent<HTMLDivElement>
@@ -162,6 +163,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       >
         {dialogOrder.map((dialogId) => (
           <Dialog
+            containerRef={ref}
             dialog={dialogs[dialogId]}
             selected={activeDialog === dialogId}
             key={dialogId}

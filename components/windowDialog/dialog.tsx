@@ -7,7 +7,7 @@ import {
   useMotionValue,
   useMotionValueEvent,
 } from "framer-motion";
-import { useEffect, useState, useMemo, useRef, forwardRef } from "react";
+import React, { useEffect, useState, useMemo, useRef, forwardRef } from "react";
 
 import { IDialog, useDialogStore } from "@/app/store";
 import { cn } from "@/lib/utils";
@@ -56,6 +56,7 @@ interface IDialogProps {
   selected: boolean;
   handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
   displayIndicator: boolean;
+  containerRef: React.RefObject<HTMLDivElement>;
 }
 
 type DialogElement = React.ElementRef<"div">;
@@ -71,6 +72,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       selected,
       handleTabBehaviour,
       displayIndicator,
+      containerRef,
     } = props;
     const controls = useDragControls();
     const dialogRef = useRef<HTMLDivElement>(null);
@@ -78,31 +80,11 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     const updateDialog = useDialogStore((state) => state.updateDialog);
     const selectDialog = useDialogStore((state) => state.selectDialog);
     const dialogOrder = useDialogStore((state) => state.dialogOrder);
-    const addDialog = useDialogStore((state) => state.addDialog);
-    const [windowWidth, setWindowWidth] = useState<number>(1200);
 
     const x = useMotionValue(dialog.x);
     const y = useMotionValue(dialog.y);
     const width = useMotionValue(dialog.width);
     const height = useMotionValue(dialog.height);
-
-    useEffect(() => {
-      function handleResize() {
-        setWindowWidth(window.innerWidth);
-      }
-      if (typeof window !== "undefined") {
-        setWindowWidth(window.innerWidth);
-      }
-      window.addEventListener("resize", handleResize);
-      return () => {
-        window.removeEventListener("resize", handleResize);
-      };
-    }, [windowWidth]);
-
-    const rightConstraint = useMemo(
-      () => windowWidth - dialog.width - 96,
-      [windowWidth, dialog.width]
-    );
 
     // 리사이즈시
     useMotionValueEvent(x, "animationComplete", () => {
@@ -135,18 +117,13 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       console.log("double clicked");
     };
 
-    // 드래그 제한
-    const dragConstraints = {
-      top: 0,
-      right: rightConstraint,
-      left: 0,
-    };
     // 리사이즈 기능
     const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
       const setRight = () => {
-        width.set(
-          Math.min(dialog.width + info.offset.x, windowWidth - x.get() - 96)
-        );
+        const maxWidth =
+          (containerRef.current?.clientWidth as number) - dialog.x;
+        const newWidth = dialog.width + info.offset.x;
+        width.set(Math.min(newWidth, maxWidth));
       };
 
       const setLeft = () => {
@@ -160,7 +137,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       };
 
       const setBottom = () => {
-        height.set(dialog.height + info.offset.y);
+        const maxHeight =
+          (containerRef.current?.clientHeight as number) - dialog.y;
+        const newHeight = dialog.height + info.offset.y;
+        height.set(Math.min(newHeight, maxHeight));
       };
 
       const operations = {
@@ -280,7 +260,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           zIndex: dialogOrder.findIndex((order) => order === dialog.id) + 1,
         }}
         drag
-        dragConstraints={dragConstraints}
+        dragConstraints={containerRef}
         dragElastic={false}
         dragMomentum={false}
         dragControls={controls}
