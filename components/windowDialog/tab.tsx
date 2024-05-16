@@ -57,10 +57,13 @@ export default function Tab({
   const dialog = dialogs[dialogId];
   const tabWidth = ref.current?.clientWidth ?? 96;
   const [yOffsetMet, setYOffsetMet] = useState(false);
+  const [xOffsetMet, setXOffsetMet] = useState(false);
 
   useMotionValueEvent(x, "change", (latest) => {
-    const shiftInOrder = Math.round(latest / tabWidth);
-    updateTabOrder(idx, shiftInOrder);
+    if (!xOffsetMet) {
+      const shiftInOrder = Math.round(latest / tabWidth);
+      updateTabOrder(idx, shiftInOrder);
+    }
   });
 
   const selectTab = () => {

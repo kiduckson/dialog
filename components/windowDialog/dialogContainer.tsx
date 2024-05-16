@@ -3,10 +3,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { useRef, useEffect, useState, forwardRef } from "react";
 import { IDialog, useDialogStore } from "../../app/store";
-import { Portal } from "./Portal";
 import Dialog from "./dialog";
-import { PanInfo } from "framer-motion";
-import useDragConstraints from "@/hooks/useDragConstraint";
 
 export type IHandleClick =
   | React.MouseEvent<HTMLDivElement>
@@ -157,7 +154,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 
     return (
       <div
-        className={`flex relative h-dvh w-full bg-muted border`}
+        className={`flex relative h-dvh w-full bg-background border`}
         ref={ref}
         onClick={handleClick}
       >
