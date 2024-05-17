@@ -10,8 +10,8 @@ export const tabVariant = cva(
   {
     variants: {
       variant: {
-        default: "bg-muted-foreground",
-        active: "bg-ring",
+        default: "bg-muted-foreground z-0",
+        active: "bg-ring z-10",
       },
       indicator: {
         none: "",
