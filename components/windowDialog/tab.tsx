@@ -11,16 +11,24 @@ import { cn } from "@/lib/utils";
 import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export const tabVariant = cva(
-  "rounded-t-lg corner px-4 w-24 min-w-12 truncate h-full",
+  "relative overflow-visible rounded-t-lg corner px-4 w-24 min-w-12 h-full",
   {
     variants: {
       variant: {
         default: "bg-slate-100 bg-slate-100/55 text-black",
         active: "bg-slate-950 hover:bg-slate-950/55",
       },
+      indicator: {
+        none: "",
+        after:
+          "after:content-[''] after:absolute after:h-full after:w-1 after:bg-blue-600 after:-right-1",
+        before:
+          "before:content-[''] before:absolute before:h-full before:w-1 before:bg-blue-600 before:-left-1",
+      },
     },
     defaultVariants: {
       variant: "default",
+      indicator: "none",
     },
   }
 );
@@ -35,6 +43,7 @@ interface ITabProps {
 
   handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
   updateActiveTab: (id: string) => void;
+  tabIndicator: "none" | "before" | "after";
 }
 
 const OFFSET_DIST = 32;
@@ -48,6 +57,7 @@ export default function Tab({
   updateTabOrder,
   handleTabBehaviour,
   updateActiveTab,
+  tabIndicator,
 }: ITabProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const x = useMotionValue(0);
@@ -80,6 +90,7 @@ export default function Tab({
       handleTabBehaviour({
         dialogId,
         tabId: tab.id,
+        tabWidth,
         ax: info.offset.x + tabWidth * idx,
         ay: info.offset.y,
         e,
@@ -89,7 +100,12 @@ export default function Tab({
   return (
     <motion.span
       ref={ref}
-      className={cn(tabVariant({ variant: isActive ? "active" : "default" }))}
+      className={cn(
+        tabVariant({
+          variant: isActive ? "active" : "default",
+          indicator: tabIndicator,
+        })
+      )}
       drag={isDraggable ? (yOffsetMet ? true : "x") : false}
       style={{
         x,

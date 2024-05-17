@@ -56,6 +56,7 @@ interface IDialogProps {
   selected: boolean;
   handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
   displayIndicator: boolean;
+  indicatorIdx: number;
   containerRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -72,6 +73,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       selected,
       handleTabBehaviour,
       displayIndicator,
+      indicatorIdx,
       containerRef,
     } = props;
     const controls = useDragControls();
@@ -233,6 +235,18 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       ? dialog.activeTab
       : dialog.tabs[0];
 
+    const [idxIndicator, pos]: [number, "none" | "before" | "after"] =
+      useMemo(() => {
+        if (!displayIndicator) {
+          return [-1, "none"];
+        }
+        if (indicatorIdx === 0) {
+          return [indicatorIdx, "before"];
+        } else {
+          return [indicatorIdx - 1, "after"];
+        }
+      }, [displayIndicator, indicatorIdx]);
+
     return (
       <motion.div
         className={cn(
@@ -293,15 +307,9 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
                 updateTabOrder={updateTabOrder}
                 handleTabBehaviour={handleTabBehaviour}
                 updateActiveTab={updateActiveTab}
+                tabIndicator={idxIndicator === idx ? pos : "none"}
               />
             ))}
-            <div
-              className={cn(
-                `indicator w-1 h-100 ${
-                  displayIndicator ? "bg-blue-600" : "bg-transparent"
-                }`
-              )}
-            />
           </motion.div>
           {/* buttons */}
         </motion.div>

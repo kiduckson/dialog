@@ -14,6 +14,7 @@ export type IHandleClick =
 export interface IhandleTabBehaviourProps {
   dialogId: string;
   tabId: string;
+  tabWidth: number;
   ax: number;
   ay: number;
   e: PointerEvent;
@@ -37,6 +38,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     const removeDialog = useDialogStore((state) => state.removeDialog);
     const addDialog = useDialogStore((state) => state.addDialog);
     const [hoveredId, setHoveredId] = useState<string>("");
+    const [hoveredIdx, setHoveredIdx] = useState<number>(0);
 
     const handleClick = (e: IHandleClick) => {
       e.stopPropagation();
@@ -55,6 +57,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     const handleTabBehaviour = ({
       dialogId,
       tabId,
+      tabWidth,
       ax,
       ay,
       e,
@@ -70,14 +73,24 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       const dialogsArray = Object.values(dialogs).filter(
         (dialog) => dialog.id !== dialogId
       );
-      const targetDialog = findTargetDialog(
+      const [targetDialog, tabIdx] = findTargetDialog(
         dialogsArray,
         calculateX,
-        calculateY
+        calculateY,
+        tabWidth
       );
+
       setHoveredId(targetDialog?.id || "");
+      setHoveredIdx(tabIdx);
+
       if (targetDialog && isEnd) {
-        mergeTabsToTargetDialog(targetDialog, dialogId, tabId, prevDialog);
+        mergeTabsToTargetDialog(
+          targetDialog,
+          dialogId,
+          tabId,
+          prevDialog,
+          tabIdx
+        );
         setHoveredId("");
       } else if (isDividable) {
         divideTabsIntoNewDialog(
@@ -93,27 +106,39 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     const findTargetDialog = (
       dialogsArray: IDialog[],
       x: number,
-      y: number
-    ): IDialog | undefined => {
-      return dialogsArray.find((dialog) => {
+      y: number,
+      tabWidth: number
+    ): [IDialog | undefined, number] => {
+      const dialog = dialogsArray.find((dialog) => {
         const yThrest = dialog.y + 32;
         const xThresh = dialog.x + dialog.width;
-        const inXRange = dialog.x < x && xThresh > x;
-        const inYRange = dialog.y < y && yThrest > y;
+        const inXRange = dialog.x - 64 < x && xThresh > x;
+        const inYRange = dialog.y - 64 < y && yThrest > y;
         return inXRange && inYRange;
       });
+      const tabIdx = dialog
+        ? Math.max(
+            Math.min(Math.round((x - dialog.x) / tabWidth), dialog.tabs.length),
+            0
+          )
+        : 0;
+      return [dialog, tabIdx];
     };
 
     const mergeTabsToTargetDialog = (
       targetDialog: IDialog,
       dialogId: string,
       tabId: string,
-      prevDialog: IDialog
+      prevDialog: IDialog,
+      tabIdx: number
     ) => {
+      const newTabs = [...targetDialog.tabs];
+      newTabs.splice(tabIdx, 0, tabId);
+
       const newDialog = {
         ...targetDialog,
-        activeTab: dialogs[dialogId].tabs[0],
-        tabs: [...targetDialog.tabs, tabId],
+        activeTab: tabId,
+        tabs: newTabs,
       };
       updateDialog(newDialog);
       const tabsAfterMove = prevDialog.tabs.filter((tab) => tab !== tabId);
@@ -167,6 +192,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             handleClick={handleClick}
             handleTabBehaviour={handleTabBehaviour}
             displayIndicator={hoveredId === dialogId}
+            indicatorIdx={hoveredIdx}
           />
         ))}
       </div>
