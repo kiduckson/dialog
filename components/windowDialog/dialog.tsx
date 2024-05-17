@@ -196,34 +196,6 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       Math.floor(Object.keys(ExpandDirection).length / 2)
     );
 
-    // 탭오더 수정
-    const updateTabOrder = (fromIndex: number, shiftInOrder: number) => {
-      const tabs = [...dialog.tabs];
-      if (tabs.length < 2) return;
-
-      let toIndex = Math.max(
-        0,
-        Math.min(tabs.length, fromIndex + shiftInOrder)
-      );
-
-      if (fromIndex === toIndex) {
-        return;
-      }
-
-      const newTab = tabs.splice(fromIndex, 1)[0];
-
-      if (fromIndex < toIndex) {
-        toIndex -= 1;
-      }
-
-      tabs.splice(toIndex, 0, newTab);
-
-      updateDialog({
-        ...dialog,
-        tabs,
-      });
-    };
-
     const updateActiveTab = (id: string) => {
       updateDialog({
         ...dialog,
@@ -250,8 +222,8 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     return (
       <motion.div
         className={cn(
-          "absolute top-0 left-0 flex flex-col bg-neutral-400 border  border-neutral-500 shadow-neutral-800",
-          selected ? "shadow-lg border-white" : "shadow-none"
+          "absolute top-0 left-0 flex flex-col bg-ac  cent border rounded-sm",
+          selected ? "shadow-lg border-border" : "shadow-none"
         )}
         style={{
           x,
@@ -286,7 +258,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       >
         <motion.div
           layout
-          className={`dialog-handle flex items-center relative justify-between h-8 border-b px-2 cursor-pointer select-none bg-neutral-700`}
+          className={`dialog-handle flex items-center relative justify-between h-10 px-2 cursor-pointer select-none bg-secondary rounded-t-sm`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
           onPointerDown={(event) => {
@@ -304,7 +276,6 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
                 dialogId={dialog.id}
                 isActive={activeTab === tabId}
                 isDraggable={dialog.tabs.length > 1}
-                updateTabOrder={updateTabOrder}
                 handleTabBehaviour={handleTabBehaviour}
                 updateActiveTab={updateActiveTab}
                 tabIndicator={idxIndicator === idx ? pos : "none"}
@@ -313,7 +284,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           </motion.div>
           {/* buttons */}
         </motion.div>
-        <div className="h-full w-full bg-zinc-700">
+        <div className="h-full w-full">
           <div>{dialog.id}</div>
           <div>{dialog.activeTab}</div>
         </div>

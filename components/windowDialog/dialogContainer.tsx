@@ -70,9 +70,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       const calculateX = prevDialog.x + ax;
       const calculateY = prevDialog.y + ay;
 
-      const dialogsArray = Object.values(dialogs).filter(
-        (dialog) => dialog.id !== dialogId
-      );
+      const dialogsArray = Object.values(dialogs);
       const [targetDialog, tabIdx] = findTargetDialog(
         dialogsArray,
         calculateX,
@@ -133,24 +131,44 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       tabIdx: number
     ) => {
       const newTabs = [...targetDialog.tabs];
-      newTabs.splice(tabIdx, 0, tabId);
+      if (targetDialog.id === dialogId) {
+        // Remove the tab from its current position
+        const currentTabIndex = newTabs.indexOf(tabId);
+        if (currentTabIndex > -1) {
+          newTabs.splice(currentTabIndex, 1);
+        }
 
-      const newDialog = {
-        ...targetDialog,
-        activeTab: tabId,
-        tabs: newTabs,
-      };
-      updateDialog(newDialog);
-      const tabsAfterMove = prevDialog.tabs.filter((tab) => tab !== tabId);
-      if (tabsAfterMove.length > 0) {
-        updateDialog({
-          ...prevDialog,
-          tabs: tabsAfterMove,
-        });
+        // Insert the tab at the new position
+        newTabs.splice(tabIdx, 0, tabId);
+
+        const newDialog = {
+          ...targetDialog,
+          activeTab: tabId,
+          tabs: newTabs,
+        };
+
+        updateDialog(newDialog);
+        selectDialog(newDialog.id);
       } else {
-        removeDialog(dialogId);
+        newTabs.splice(tabIdx, 0, tabId);
+
+        const newDialog = {
+          ...targetDialog,
+          activeTab: tabId,
+          tabs: newTabs,
+        };
+        updateDialog(newDialog);
+        const tabsAfterMove = prevDialog.tabs.filter((tab) => tab !== tabId);
+        if (tabsAfterMove.length > 0) {
+          updateDialog({
+            ...prevDialog,
+            tabs: tabsAfterMove,
+          });
+        } else {
+          removeDialog(dialogId);
+        }
+        selectDialog(newDialog.id);
       }
-      selectDialog(newDialog.id);
     };
 
     const divideTabsIntoNewDialog = (
