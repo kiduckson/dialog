@@ -284,7 +284,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           </motion.div>
           {/* buttons */}
         </motion.div>
-        <div className="h-full w-full">
+        <div className="h-full w-full bg-muted">
           <div>{dialog.id}</div>
           <div>{dialog.activeTab}</div>
         </div>
