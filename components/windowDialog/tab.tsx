@@ -10,15 +10,15 @@ export const tabVariant = cva(
   {
     variants: {
       variant: {
-        default: "bg-muted-foreground z-0",
-        active: "bg-ring z-10",
+        default: "bg-muted z-0",
+        active: "bg-accent-foreground text-primary z-10",
       },
       indicator: {
         none: "",
         after:
-          "after:content-[''] after:absolute after:h-full after:w-1 after:bg-blue-600 after:-right-1",
+          "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-right-1",
         before:
-          "before:content-[''] before:absolute before:h-full before:w-1 before:bg-blue-600 before:-left-1",
+          "before:content-[''] before:absolute before:h-full before:w-1 before:bg-muted-foreground before:-left-1",
       },
     },
     defaultVariants: {

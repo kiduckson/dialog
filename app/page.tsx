@@ -9,7 +9,7 @@ export default function Home() {
         breakcrums
       </nav>
       <div className="grid grid-cols-[auto_1fr] w-full h-full">
-        <div className="text-9xl">TEST</div>
+        <div className="text-9xl border">TEST</div>
         <DialogContainer />
       </div>
     </>

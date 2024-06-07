@@ -256,7 +256,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       >
         <motion.div
           layout
-          className={`dialog-handle flex items-center relative justify-between h-10 px-2 cursor-pointer select-none bg-orange-400 rounded-t-sm`}
+          className={`dialog-handle flex items-center relative justify-between h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
           data-dialog-id={dialog.id}
@@ -283,7 +283,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           </motion.div>
           {/* buttons */}
         </motion.div>
-        <div className="h-full w-full bg-muted">
+        <div className="h-full w-full bg-muted-background">
           <div>{dialog.id}</div>
           <div>{dialog.activeTab}</div>
         </div>
