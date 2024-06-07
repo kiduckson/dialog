@@ -27,18 +27,12 @@ export default function RootLayout({
       <body className={gentiumPlus.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="light"
+          defaultTheme="dark"
           enableSystem
           disableTransitionOnChange
         >
-          <main className="flex min-h-screen min-w-screen flex-col items-center justify-between bg-background">
-            <nav className="flex justify-between items-center h-8 w-full p-1 bg-background border">
-              breakcrums
-            </nav>
-            <div className="grid grid-cols-[auto_1fr] w-full">
-              <div className="text-9xl">TEST</div>
-              <div>{children}</div>
-            </div>
+          <main className="flex h-svh w-svw flex-col items-center justify-between bg-background">
+            {children}
           </main>
         </ThemeProvider>
       </body>

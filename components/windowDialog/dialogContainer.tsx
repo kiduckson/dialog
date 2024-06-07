@@ -212,16 +212,17 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         height: prevDialog.height,
         activeTab: tabId,
         tabs: [tabId],
+        enlarged: false,
+        prevWidth: prevDialog.width,
+        prevHeight: prevDialog.width,
+        prevX: x,
+        prevY: y,
       });
       selectDialog(newDialogId);
     };
 
     return (
-      <div
-        className={`flex relative h-dvh w-full bg-background border`}
-        ref={ref}
-        onClick={handleClick}
-      >
+      <div className="relative border" ref={ref} onClick={handleClick}>
         {dialogOrder.map((dialogId) => (
           <Dialog
             containerRef={ref}
