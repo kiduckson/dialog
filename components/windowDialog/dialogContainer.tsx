@@ -54,6 +54,37 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       selectDialog(id);
     };
 
+    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLDivElement;
+      const dialogId = target.dataset.dialogId;
+
+      if (!dialogId || !ref.current) {
+        return;
+      }
+
+      const { clientWidth: containerWidth, clientHeight: containerHeight } =
+        ref.current;
+      const dialog = dialogs[dialogId];
+
+      if (!dialog) {
+        return;
+      }
+
+      const isEnlarged = dialog.enlarged;
+
+      updateDialog({
+        ...dialog,
+        enlarged: !isEnlarged,
+        x: isEnlarged ? dialog.prevX : 0,
+        y: isEnlarged ? dialog.prevY : 0,
+        prevX: isEnlarged ? dialog.prevX : dialog.x,
+        prevY: isEnlarged ? dialog.prevY : dialog.y,
+        width: isEnlarged ? dialog.prevWidth : containerWidth,
+        height: isEnlarged ? dialog.prevHeight : containerHeight,
+        prevWidth: isEnlarged ? dialog.prevWidth : dialog.width,
+        prevHeight: isEnlarged ? dialog.prevHeight : dialog.height,
+      });
+    };
     const handleTabBehaviour = ({
       dialogId,
       tabId,
@@ -209,6 +240,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             key={dialogId}
             handleClick={handleClick}
             handleTabBehaviour={handleTabBehaviour}
+            handleDoubleClick={handleDoubleClick}
             displayIndicator={hoveredId === dialogId}
             indicatorIdx={hoveredIdx}
           />

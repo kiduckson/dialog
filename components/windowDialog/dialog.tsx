@@ -55,6 +55,7 @@ interface IDialogProps {
   handleClick: any;
   selected: boolean;
   handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
+  handleDoubleClick: React.MouseEventHandler<HTMLDivElement>;
   displayIndicator: boolean;
   indicatorIdx: number;
   containerRef: React.RefObject<HTMLDivElement>;
@@ -72,6 +73,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       handleClick,
       selected,
       handleTabBehaviour,
+      handleDoubleClick,
       displayIndicator,
       indicatorIdx,
       containerRef,
@@ -113,11 +115,6 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         width: width.get(),
       });
     });
-
-    // 더블 클릭
-    const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-      console.log("double clicked");
-    };
 
     // 리사이즈 기능
     const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
@@ -187,6 +184,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         x: x.get(),
         width: width.get(),
         height: height.get(),
+        enlarged: false,
       });
       selectDialog(dialog.id);
     };
@@ -258,9 +256,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       >
         <motion.div
           layout
-          className={`dialog-handle flex items-center relative justify-between h-10 px-2 cursor-pointer select-none bg-secondary rounded-t-sm`}
+          className={`dialog-handle flex items-center relative justify-between h-10 px-2 cursor-pointer select-none bg-orange-400 rounded-t-sm`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
+          data-dialog-id={dialog.id}
           onPointerDown={(event) => {
             controls.start(event);
           }}

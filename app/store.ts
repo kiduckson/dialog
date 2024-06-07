@@ -9,6 +9,11 @@ export interface IDialog {
   height: number;
   activeTab: string;
   tabs: string[];
+  enlarged: boolean;
+  prevWidth: number;
+  prevHeight: number;
+  prevX: number;
+  prevY: number;
 }
 export interface Itab {
   id: string;
@@ -62,6 +67,11 @@ export const useDialogStore = create<State & Action>()(
           "cce836b9-054f-4dec-ba99-34f35395e93e",
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
         ],
+        enlarged: false,
+        prevHeight: 200,
+        prevWidth: 400,
+        prevX: 0,
+        prevY: 0,
       },
     },
     addDialog: (dialog: IDialog) =>

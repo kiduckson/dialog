@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Gentium_Plus } from "next/font/google";
 import "@/styles/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Book, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 const inter = Inter({ subsets: ["latin"] });
+const gentiumPlus = Gentium_Plus({
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Personal CV",
@@ -20,7 +24,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head />
-      <body className={inter.className}>
+      <body className={gentiumPlus.className}>
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -29,13 +33,10 @@ export default function RootLayout({
         >
           <main className="flex min-h-screen min-w-screen flex-col items-center justify-between bg-background">
             <nav className="flex justify-between items-center h-8 w-full p-1 bg-background border">
-              <Book className="h-4 w-4" />
-              <Button variant="ghost" size="xs">
-                <Plus width={14} height={14} />
-              </Button>
+              breakcrums
             </nav>
             <div className="grid grid-cols-[auto_1fr] w-full">
-              <div className="border">side</div>
+              <div className="text-9xl">TEST</div>
               <div>{children}</div>
             </div>
           </main>
