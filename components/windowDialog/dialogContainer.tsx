@@ -53,38 +53,28 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       }
       selectDialog(id);
     };
-
     const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLDivElement;
       const dialogId = target.dataset.dialogId;
-
-      if (!dialogId || !ref.current) {
-        return;
+      if (dialogId && ref.current) {
+        const { clientWidth: containerWidth, clientHeight: containerHeight } =
+          ref.current;
+        const dialog = dialogs[dialogId];
+        updateDialog({
+          ...dialog,
+          enlarged: !dialog.enlarged,
+          x: dialog.enlarged ? dialog.prevX : 0,
+          y: dialog.enlarged ? dialog.prevY : 0,
+          prevX: dialog.enlarged ? dialog.prevX : dialog.x,
+          prevY: dialog.enlarged ? dialog.prevY : dialog.y,
+          width: dialog.enlarged ? dialog.prevWidth : containerWidth,
+          height: dialog.enlarged ? dialog.prevHeight : containerHeight,
+          prevWidth: dialog.enlarged ? dialog.prevWidth : dialog.width,
+          prevHeight: dialog.enlarged ? dialog.prevHeight : dialog.height,
+        });
       }
-
-      const { clientWidth: containerWidth, clientHeight: containerHeight } =
-        ref.current;
-      const dialog = dialogs[dialogId];
-
-      if (!dialog) {
-        return;
-      }
-
-      const isEnlarged = dialog.enlarged;
-
-      updateDialog({
-        ...dialog,
-        enlarged: !isEnlarged,
-        x: isEnlarged ? dialog.prevX : 0,
-        y: isEnlarged ? dialog.prevY : 0,
-        prevX: isEnlarged ? dialog.prevX : dialog.x,
-        prevY: isEnlarged ? dialog.prevY : dialog.y,
-        width: isEnlarged ? dialog.prevWidth : containerWidth,
-        height: isEnlarged ? dialog.prevHeight : containerHeight,
-        prevWidth: isEnlarged ? dialog.prevWidth : dialog.width,
-        prevHeight: isEnlarged ? dialog.prevHeight : dialog.height,
-      });
     };
+
     const handleTabBehaviour = ({
       dialogId,
       tabId,
