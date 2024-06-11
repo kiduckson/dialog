@@ -222,7 +222,11 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     };
 
     return (
-      <div className="relative border" ref={ref} onClick={handleClick}>
+      <div
+        className="relative border border-t-0"
+        ref={ref}
+        onClick={handleClick}
+      >
         {dialogOrder.map((dialogId) => (
           <Dialog
             containerRef={ref}

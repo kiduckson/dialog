@@ -6,12 +6,12 @@ import { cn } from "@/lib/utils";
 import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export const tabVariant = cva(
-  "relative flex justify-center items-center overflow-visible rounded-lg corner px-4 w-24 min-w-12 h-full",
+  "relative flex justify-center items-center overflow-visible rounded-t-md corner px-4 w-18 min-w-12 h-full",
   {
     variants: {
       variant: {
         default: "bg-muted z-0",
-        active: "bg-accent-foreground text-primary z-10",
+        active: "bg-accent-foreground text-secondary z-10",
       },
       indicator: {
         none: "",

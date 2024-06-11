@@ -66,6 +66,9 @@ interface WindowDialogProps {
   container?: HTMLElement | null;
 }
 
+const MIN_Y = 140;
+const MIN_X = 280;
+
 const Dialog = forwardRef<DialogElement, IDialogProps>(
   (props, forwardedRef) => {
     const {
@@ -90,7 +93,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     const width = useMotionValue(dialog.width);
     const height = useMotionValue(dialog.height);
 
-    // 리사이즈시
+    // x, y이동
     useMotionValueEvent(x, "animationComplete", () => {
       updateDialog({
         ...dialog,
@@ -99,7 +102,6 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       });
     });
 
-    // 리사이즈 시
     useMotionValueEvent(y, "animationComplete", () => {
       updateDialog({
         ...dialog,
@@ -108,37 +110,42 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       });
     });
 
-    // 넓이 수정시
-    useMotionValueEvent(width, "animationComplete", () => {
-      updateDialog({
-        ...dialog,
-        width: width.get(),
-      });
-    });
-
     // 리사이즈 기능
     const handleDialogResize = (info: PanInfo, direction: ExpandDirection) => {
       const setRight = () => {
+        const minXReached = dialog.width + info.offset.x < MIN_X;
+        const offsetX = minXReached ? -(dialog.width - MIN_X) : info.offset.x;
+
         const maxWidth =
           (containerRef.current?.clientWidth as number) - dialog.x;
-        const newWidth = dialog.width + info.offset.x;
+        const newWidth = dialog.width + offsetX;
         width.set(Math.min(newWidth, maxWidth));
       };
 
       const setLeft = () => {
-        x.set(dialog.x + info.offset.x);
-        width.set(dialog.width + -info.offset.x);
+        const minXReached = dialog.width - info.offset.x < MIN_X;
+        const offsetX = minXReached ? dialog.width - MIN_X : info.offset.x;
+        const calX = dialog.x + offsetX <= 0 ? -dialog.x : offsetX;
+        x.set(dialog.x + calX);
+        width.set(dialog.width - calX);
       };
 
       const setTop = () => {
-        y.set(dialog.y + info.offset.y);
-        height.set(dialog.height + -info.offset.y);
+        const minYReached = dialog.height - info.offset.y < MIN_Y;
+        const offsetY = minYReached ? dialog.height - MIN_Y : info.offset.y;
+        const calY = dialog.y + offsetY <= 0 ? -dialog.y : offsetY;
+
+        y.set(dialog.y + calY);
+        height.set(dialog.height - calY);
       };
 
       const setBottom = () => {
+        const minYReached = dialog.height + info.offset.y < MIN_Y;
+        const offsetY = minYReached ? -(dialog.height - MIN_Y) : info.offset.y;
+
         const maxHeight =
           (containerRef.current?.clientHeight as number) - dialog.y;
-        const newHeight = dialog.height + info.offset.y;
+        const newHeight = dialog.height + offsetY;
         height.set(Math.min(newHeight, maxHeight));
       };
 
@@ -177,6 +184,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         operation();
       }
     };
+
     const handleHandleDragEnd = () => {
       updateDialog({
         ...dialog,
@@ -220,8 +228,8 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     return (
       <motion.div
         className={cn(
-          "absolute top-0 left-0 flex flex-col bg-ac  cent border rounded-sm",
-          selected ? "shadow-lg border-border" : "shadow-none"
+          "absolute top-0 left-0 flex flex-col bg-accent border rounded-sm",
+          selected ? "shadow-md" : "shadow-sm"
         )}
         style={{
           x,
@@ -256,7 +264,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       >
         <motion.div
           layout
-          className={`dialog-handle flex items-center relative justify-between h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border`}
+          className={`dialog-handle flex items-center relative justify-between h-10 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
           data-dialog-id={dialog.id}
@@ -283,7 +291,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           </motion.div>
           {/* buttons */}
         </motion.div>
-        <div className="h-full w-full bg-muted-background">
+        <div className="h-full w-full bg-secondary">
           <div>{dialog.id}</div>
           <div>{dialog.activeTab}</div>
         </div>

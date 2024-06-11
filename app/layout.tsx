@@ -27,7 +27,7 @@ export default function RootLayout({
       <body className={gentiumPlus.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange
         >
