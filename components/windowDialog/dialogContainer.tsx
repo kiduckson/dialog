@@ -83,19 +83,19 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       ay,
       e,
     }: IhandleTabBehaviourProps) => {
+      if (!ref.current) return;
+      const { clientWidth: containerWidth, clientHeight: containerHeight } =
+        ref.current;
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
       const isEnd = e.type === "pointerup";
       const isDividable = prevDialog.tabs.length > 1 && isEnd;
 
-      const calculateX = prevDialog.x + ax;
-      const calculateY = prevDialog.y + ay;
-
       const dialogsArray = Object.values(dialogs);
       const [targetDialog, tabIdx] = findTargetDialog(
         dialogsArray,
-        calculateX,
-        calculateY,
+        prevDialog.x + ax,
+        prevDialog.y + ay,
         tabWidth
       );
 
@@ -112,6 +112,20 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         );
         setHoveredId("");
       } else if (isDividable) {
+        const calculateX =
+          prevDialog.x + ax < 0
+            ? 0
+            : prevDialog.x + ax + prevDialog.width > containerWidth
+            ? containerWidth - prevDialog.width
+            : prevDialog.x + ax;
+
+        const calculateY =
+          prevDialog.y + ay < 0
+            ? 0
+            : prevDialog.y + ay + prevDialog.height > containerHeight
+            ? containerHeight - prevDialog.height
+            : prevDialog.y + ay;
+
         divideTabsIntoNewDialog(
           newDialogId,
           tabId,
