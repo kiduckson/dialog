@@ -21,6 +21,8 @@ export interface IhandleTabBehaviourProps {
 }
 
 const WINDOW_DIALOG_NAME = "WindowDialog";
+const X_THRESHOLD = 32;
+const Y_THRESHOLD = 64;
 
 type WindowDialogElement = React.ElementRef<"div">;
 interface WindowDialogProps {
@@ -39,6 +41,13 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     const addDialog = useDialogStore((state) => state.addDialog);
     const [hoveredId, setHoveredId] = useState<string>("");
     const [hoveredIdx, setHoveredIdx] = useState<number>(0);
+    const [showPortal, setShowPortal] = useState(false);
+    const [indicatorDimension, setIndicatorDimension] = useState({
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 200,
+    });
 
     const handleClick = (e: IHandleClick) => {
       e.stopPropagation();
@@ -91,6 +100,20 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       const isEnd = e.type === "pointerup";
       const isDividable = prevDialog.tabs.length > 1 && isEnd;
 
+      const calculateX =
+        prevDialog.x + ax < 0
+          ? 0
+          : prevDialog.x + ax + prevDialog.width > containerWidth
+          ? containerWidth - prevDialog.width
+          : prevDialog.x + ax;
+
+      const calculateY =
+        prevDialog.y + ay < 0
+          ? 0
+          : prevDialog.y + ay + prevDialog.height > containerHeight
+          ? containerHeight - prevDialog.height
+          : prevDialog.y + ay;
+
       const dialogsArray = Object.values(dialogs);
       const [targetDialog, tabIdx] = findTargetDialog(
         dialogsArray,
@@ -101,7 +124,13 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 
       setHoveredId(targetDialog?.id || "");
       setHoveredIdx(tabIdx);
-
+      setShowPortal(!targetDialog && !isEnd && prevDialog.tabs.length > 1);
+      setIndicatorDimension({
+        x: calculateX,
+        y: calculateY,
+        width: prevDialog.width,
+        height: prevDialog.height,
+      });
       if (targetDialog && isEnd) {
         mergeTabsToTargetDialog(
           targetDialog,
@@ -112,20 +141,6 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         );
         setHoveredId("");
       } else if (isDividable) {
-        const calculateX =
-          prevDialog.x + ax < 0
-            ? 0
-            : prevDialog.x + ax + prevDialog.width > containerWidth
-            ? containerWidth - prevDialog.width
-            : prevDialog.x + ax;
-
-        const calculateY =
-          prevDialog.y + ay < 0
-            ? 0
-            : prevDialog.y + ay + prevDialog.height > containerHeight
-            ? containerHeight - prevDialog.height
-            : prevDialog.y + ay;
-
         divideTabsIntoNewDialog(
           newDialogId,
           tabId,
@@ -143,10 +158,10 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       tabWidth: number
     ): [IDialog | undefined, number] => {
       const dialog = dialogsArray.find((dialog) => {
-        const yThrest = dialog.y + 32;
+        const yThrest = dialog.y + X_THRESHOLD;
         const xThresh = dialog.x + dialog.width;
-        const inXRange = dialog.x - 64 < x && xThresh > x;
-        const inYRange = dialog.y - 64 < y && yThrest > y;
+        const inXRange = dialog.x - Y_THRESHOLD < x && xThresh > x;
+        const inYRange = dialog.y - Y_THRESHOLD < y && yThrest > y;
         return inXRange && inYRange;
       });
       const tabIdx = dialog
@@ -155,6 +170,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             0
           )
         : 0;
+
       return [dialog, tabIdx];
     };
 
@@ -252,8 +268,19 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             handleDoubleClick={handleDoubleClick}
             displayIndicator={hoveredId === dialogId}
             indicatorIdx={hoveredIdx}
+            showPortal={showPortal}
           />
         ))}
+        {showPortal && (
+          <div
+            className="absolute top-0 left-0 rounded-md border-2 bg-secondary/80 shadow-sm"
+            style={{
+              width: indicatorDimension.width,
+              height: indicatorDimension.height,
+              transform: `translateX(${indicatorDimension.x}px) translateY(${indicatorDimension.y}px) translateZ(0px)`,
+            }}
+          />
+        )}
       </div>
     );
   }

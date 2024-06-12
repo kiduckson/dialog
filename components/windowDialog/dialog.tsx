@@ -27,7 +27,7 @@ export enum ExpandDirection {
   bottomRight,
 }
 
-export const handleVariant = cva("absolute hover:bg-card/20", {
+export const handleVariant = cva("absolute bg-primary", {
   variants: {
     handlePos: {
       [ExpandDirection.top]:
@@ -59,6 +59,7 @@ interface IDialogProps {
   displayIndicator: boolean;
   indicatorIdx: number;
   containerRef: React.RefObject<HTMLDivElement>;
+  showPortal: boolean;
 }
 
 type DialogElement = React.ElementRef<"div">;
@@ -80,6 +81,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       displayIndicator,
       indicatorIdx,
       containerRef,
+      showPortal,
     } = props;
     const controls = useDragControls();
     const dialogRef = useRef<HTMLDivElement>(null);
@@ -286,15 +288,12 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
                 handleTabBehaviour={handleTabBehaviour}
                 updateActiveTab={updateActiveTab}
                 tabIndicator={idxIndicator === idx ? pos : "none"}
+                showPortal={showPortal}
               />
             ))}
           </motion.div>
           {/* buttons */}
         </motion.div>
-        <div className="h-full w-full bg-secondary">
-          <div>{dialog.id}</div>
-          <div>{dialog.activeTab}</div>
-        </div>
         {handles.map((handle, idx) => (
           <DialogHandle
             key={idx}
@@ -303,6 +302,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
             handleHandleDragEnd={handleHandleDragEnd}
           />
         ))}
+        <div className="h-full w-full bg-secondary">
+          <div>{dialog.id}</div>
+          <div>{dialog.activeTab}</div>
+        </div>
       </motion.div>
     );
   }

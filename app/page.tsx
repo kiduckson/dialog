@@ -16,7 +16,7 @@ export default function Home() {
         </Link>
       </nav>
       <div className="grid grid-cols-[auto_1fr] w-full h-full">
-        <div className="text-4xl p-2 w-24">TEST</div>
+        <div className="text-4xl p-2 w-24 border-l border-b">TEST</div>
         <DialogContainer />
       </div>
     </>

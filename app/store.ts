@@ -53,6 +53,10 @@ export const useDialogStore = create<State & Action>()(
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
         title: "tab3",
       },
+      "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb": {
+        id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
+        title: "tab4",
+      },
     },
     dialogs: {
       "fa077d41-9786-457d-bf5a-2a85a4d9bbbb": {
@@ -66,6 +70,7 @@ export const useDialogStore = create<State & Action>()(
           "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
           "cce836b9-054f-4dec-ba99-34f35395e93e",
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
+          "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
         ],
         enlarged: false,
         prevHeight: 200,

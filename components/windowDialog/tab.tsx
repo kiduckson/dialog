@@ -10,8 +10,10 @@ export const tabVariant = cva(
   {
     variants: {
       variant: {
-        default: "bg-muted z-0",
-        active: "bg-accent-foreground text-secondary z-10",
+        default: "bg-muted z-0 hover:brightness-90",
+        active: "bg-accent-foreground text-secondary z-10 hover:brightness-90",
+        minimized:
+          "bg-muted/90 rounded-full w-4 h-4 cursor-grabbing px-0 min-w-0 z-10",
       },
       indicator: {
         none: "",
@@ -38,6 +40,7 @@ interface ITabProps {
   handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
   updateActiveTab: (id: string) => void;
   tabIndicator: "none" | "before" | "after";
+  showPortal: boolean;
 }
 
 export default function Tab({
@@ -49,15 +52,19 @@ export default function Tab({
   handleTabBehaviour,
   updateActiveTab,
   tabIndicator,
+  showPortal,
 }: ITabProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
-  const dialogs = useDialogStore((state) => state.dialogs);
   const selectDialog = useDialogStore((state) => state.selectDialog);
+  const [selected, setSelected] = useState(false);
+
   const tabWidth = ref.current?.clientWidth ?? 96;
+  const computedSelected = isActive && showPortal && selected;
 
   const selectTab = () => {
+    setSelected(true);
     selectDialog(dialogId);
     updateActiveTab(tab.id);
   };
@@ -79,7 +86,11 @@ export default function Tab({
       ref={ref}
       className={cn(
         tabVariant({
-          variant: isActive ? "active" : "default",
+          variant: computedSelected
+            ? "minimized"
+            : isActive
+            ? "active"
+            : "default",
           indicator: tabIndicator,
         })
       )}
@@ -96,13 +107,15 @@ export default function Tab({
       }}
       onPanEnd={(e, info) => {
         handlePan(e, info);
+        setSelected(false);
       }}
       dragElastic={false}
       dragMomentum={false}
       dragSnapToOrigin
       data-tab-id={tab.id}
+      whileTap={{ scale: 1.02 }}
     >
-      {tab.title}
+      {!computedSelected && tab.title}
     </motion.span>
   );
 }
