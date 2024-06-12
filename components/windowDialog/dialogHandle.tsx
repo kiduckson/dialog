@@ -1,6 +1,6 @@
 "use client";
 
-import { PanInfo, motion } from "framer-motion";
+import { PanInfo, motion, useMotionValue } from "framer-motion";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { ExpandDirection, handleVariant } from "./dialog";
@@ -14,6 +14,8 @@ const DialogHandle = forwardRef<
     handleHandleDragEnd: () => void;
   }
 >(({ direction, handleHandleDragEnd, handleDialogResize }, ref) => {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
   return (
     <motion.span
       ref={ref}
@@ -22,8 +24,16 @@ const DialogHandle = forwardRef<
       dragMomentum={false}
       dragSnapToOrigin
       className={cn(handleVariant({ handlePos: direction }))}
-      onDrag={(e, info: PanInfo) => handleDialogResize(info, direction)}
+      onDrag={(e, info: PanInfo) => {
+        handleDialogResize(info, direction);
+        x.set(0);
+        y.set(0);
+      }}
       onDragEnd={handleHandleDragEnd}
+      style={{
+        x,
+        y,
+      }}
     />
   );
 });
