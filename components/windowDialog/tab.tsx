@@ -13,7 +13,7 @@ export const tabVariant = cva(
         default: "bg-muted z-0 hover:brightness-90",
         active: "bg-accent-foreground text-secondary z-10 hover:brightness-90",
         minimized:
-          "bg-muted/90 rounded-full w-4 h-4 cursor-grabbing px-0 min-w-0 z-10",
+          "bg-muted/90 rounded-full w-4 h-4 cursor-grabbing px-0 min-w-0 z-20",
       },
       indicator: {
         none: "",
@@ -114,6 +114,7 @@ export default function Tab({
       dragSnapToOrigin
       data-tab-id={tab.id}
       whileTap={{ scale: 1.02 }}
+      tabIndex={-1}
     >
       {!computedSelected && tab.title}
     </motion.span>

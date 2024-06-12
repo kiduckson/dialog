@@ -27,15 +27,15 @@ export enum ExpandDirection {
   bottomRight,
 }
 
-export const handleVariant = cva("absolute bg-primary", {
+export const handleVariant = cva("absolute rounded-sm", {
   variants: {
     handlePos: {
       [ExpandDirection.top]:
         "top-[-0.25rem] w-full h-2 cursor-row-resize z-[1]",
       [ExpandDirection.topLeft]:
-        "top-[-0.25rem] left-[-0.25rem] h-4 w-4 cursor-nwse-resize z-[2]",
+        "top-[-0.5rem] left-[-0.5rem] h-4 w-4 cursor-nwse-resize z-[2]",
       [ExpandDirection.topRight]:
-        "top-[-0.25rem] right-[-0.25rem] h-4 w-4 cursor-nesw-resize z-[2]",
+        "top-[-0.5rem] right-[-0.5rem] h-4 w-4 cursor-nesw-resize z-[2]",
       [ExpandDirection.left]:
         "left-[-0.25rem] h-full w-2 cursor-col-resize z-[2]",
       [ExpandDirection.right]:
@@ -43,10 +43,18 @@ export const handleVariant = cva("absolute bg-primary", {
       [ExpandDirection.bottom]:
         "bottom-[-0.25rem] w-full h-2 cursor-row-resize z-[1]",
       [ExpandDirection.bottomLeft]:
-        "bottom-[-0.25rem] left-[-0.25rem] h-4 w-4 cursor-nesw-resize z-[2]",
+        "bottom-[-0.5rem] left-[-0.5rem] h-4 w-4 cursor-nesw-resize z-[2]",
       [ExpandDirection.bottomRight]:
-        "bottom-[-0.25rem] right-[-0.25rem] h-4 w-4 cursor-nwse-resize z-[2]",
+        "bottom-[-0.5rem] right-[-0.5rem] h-4 w-4 cursor-nwse-resize z-[2]",
     },
+    display: {
+      hidden: "bg-transparent",
+      hover: "hover:bg-primary/50",
+      visible: "bg-primary",
+    },
+  },
+  defaultVariants: {
+    display: "hidden",
   },
 });
 
@@ -63,9 +71,6 @@ interface IDialogProps {
 }
 
 type DialogElement = React.ElementRef<"div">;
-interface WindowDialogProps {
-  container?: HTMLElement | null;
-}
 
 const MIN_Y = 140;
 const MIN_X = 280;
@@ -294,12 +299,13 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           </motion.div>
           {/* buttons */}
         </motion.div>
-        {handles.map((handle, idx) => (
+        {handles.map((handlePos, idx) => (
           <DialogHandle
             key={idx}
-            direction={handle as ExpandDirection}
+            handlePos={handlePos as ExpandDirection}
             handleDialogResize={handleDialogResize}
             handleHandleDragEnd={handleHandleDragEnd}
+            display="visible"
           />
         ))}
         <div className="h-full w-full bg-secondary">

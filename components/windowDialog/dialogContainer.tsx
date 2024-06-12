@@ -273,7 +273,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         ))}
         {showPortal && (
           <div
-            className="absolute top-0 left-0 rounded-md border-2 bg-secondary/80 shadow-sm"
+            className="absolute top-0 left-0 rounded-md border-2 bg-secondary/80 shadow-sm z-20"
             style={{
               width: indicatorDimension.width,
               height: indicatorDimension.height,
