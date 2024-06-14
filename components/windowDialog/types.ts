@@ -63,7 +63,7 @@ export interface TabBehaviorProps {
   ax: number;
   ay: number;
   info: PanInfo;
-  event: PointerEvent;
+  e: PointerEvent;
 }
 
 export type WindowDialogElement = React.ElementRef<"div">;

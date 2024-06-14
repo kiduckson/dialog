@@ -1,14 +1,11 @@
 "use client";
 
 import { v4 as uuidv4 } from "uuid";
-import { useRef, useEffect, useState, forwardRef } from "react";
+import { useRef, useState, forwardRef } from "react";
 import { useDialogStore } from "@/app/store";
 import type {
   DialogEnlargedType,
   DialogRecord,
-  DialogTab,
-  DialogStoreState,
-  DialogStoreActions,
   DialogPosition,
   DialogClickEvent,
   TabBehaviorProps,
@@ -32,7 +29,6 @@ import { MotionValue, PanInfo } from "framer-motion";
  *
  */
 
-const WINDOW_DIALOG_NAME = "WindowDialog";
 const X_THRESHOLD = 32;
 const Y_THRESHOLD = 64;
 const ENLARGE_THRESHOLD = 20;
@@ -109,8 +105,8 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       tabWidth,
       ax,
       ay,
-      event,
       info,
+      e,
     }: TabBehaviorProps) => {
       if (!ref.current) return;
 
@@ -129,7 +125,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
-      const isEnd = event.type === "pointerup";
+      const isEnd = e.type === "pointerup";
 
       const dialogsArray = Object.values(dialogs);
       const [direction, displayPortal, cordinates] = getFixedDirection(
