@@ -17,6 +17,7 @@ import Dialog from "./dialog";
 import { MotionValue, PanInfo } from "framer-motion";
 
 /**
+ * TODO:
  * set state
  * 1. dialogMove
  *    - dialog to left border
@@ -26,7 +27,8 @@ import { MotionValue, PanInfo } from "framer-motion";
  * 2. tabMove
  *    - tabMoveMerge
  *    - tab
- *
+ * TODO:
+ * 탭위치가 머지 에어리어에 들어 왔을때 0.2초이상 스테이시 해당 윈도우 선택
  */
 
 const X_THRESHOLD = 32;

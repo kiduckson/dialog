@@ -104,8 +104,6 @@ export default function Tab({
       onClick={selectTab}
       onPanStart={selectTab}
       onPan={(e, info) => {
-        console.log(e);
-
         handlePan(e, info);
       }}
       onPanEnd={(e, info) => {
