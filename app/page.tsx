@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import DialogContainer from "@/components/windowDialog/dialogContainer";
 import Link from "next/link";
 
@@ -15,7 +14,7 @@ export default function Home() {
           HOME
         </Link>
       </nav>
-      <div className="grid grid-cols-[auto_1fr] w-full h-full">
+      <div className="grid grid-cols-[auto_1fr_40px] grid-rows-[auto_40px] w-full h-full">
         <div className="text-4xl p-2 w-24 border-l border-b">TEST</div>
         <DialogContainer />
       </div>

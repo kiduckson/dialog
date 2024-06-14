@@ -64,6 +64,7 @@ interface IDialogProps {
   selected: boolean;
   handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
   handleDoubleClick: React.MouseEventHandler<HTMLDivElement>;
+  handlePresetDialogSize: any;
   displayIndicator: boolean;
   indicatorIdx: number;
   containerRef: React.RefObject<HTMLDivElement>;
@@ -83,6 +84,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       selected,
       handleTabBehaviour,
       handleDoubleClick,
+      handlePresetDialogSize,
       displayIndicator,
       indicatorIdx,
       containerRef,
@@ -100,21 +102,26 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     const width = useMotionValue(dialog.width);
     const height = useMotionValue(dialog.height);
 
+    const [dragSelected, setDragSelected] = useState(false);
+
+    useMotionValueEvent(x, "change", (latest) => {
+      console.log(latest);
+
+      setDragSelected(true);
+    });
+
+    useMotionValueEvent(y, "change", (latest) => {
+      console.log(latest);
+
+      setDragSelected(true);
+    });
     // x, y이동
     useMotionValueEvent(x, "animationComplete", () => {
-      updateDialog({
-        ...dialog,
-        x: x.get(),
-        y: y.get(),
-      });
+      setDragSelected(false);
     });
 
     useMotionValueEvent(y, "animationComplete", () => {
-      updateDialog({
-        ...dialog,
-        x: x.get(),
-        y: y.get(),
-      });
+      setDragSelected(false);
     });
 
     // 리사이즈 기능
@@ -199,7 +206,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         x: x.get(),
         width: width.get(),
         height: height.get(),
-        enlarged: false,
+        enlarged: "center",
       });
       selectDialog(dialog.id);
     };
@@ -245,6 +252,12 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           height,
         }}
         layout
+        transition={{
+          layout: {
+            ease: "linear",
+            duration: 0.2,
+          },
+        }}
         initial={{
           x: dialog.x,
           y: dialog.y,
@@ -263,15 +276,26 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         dragElastic={false}
         dragMomentum={false}
         dragControls={controls}
+        onDrag={(e, info) => {
+          if (dialog.tabs.length > 1)
+            handlePresetDialogSize(dialog, e, info, x.get(), y.get());
+        }}
+        onDragEnd={(e, info) => {
+          if (dialog.tabs.length > 1)
+            handlePresetDialogSize(dialog, e, info, x.get(), y.get());
+        }}
         dragListener={false}
         onClick={handleClick}
         onDragStart={handleClick}
         data-dialog-id={dialog.id}
         ref={dialogRef}
       >
+        {/* headers */}
         <motion.div
           layout
-          className={`dialog-handle flex items-center relative justify-between h-10 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b`}
+          className={`dialog-handle flex items-center relative justify-between h-10 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b ${
+            dragSelected && "bg-primary/25"
+          }`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
           data-dialog-id={dialog.id}
@@ -299,15 +323,19 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           </motion.div>
           {/* buttons */}
         </motion.div>
+
+        {/* resize handles */}
         {handles.map((handlePos, idx) => (
           <DialogHandle
             key={idx}
             handlePos={handlePos as ExpandDirection}
             handleDialogResize={handleDialogResize}
             handleHandleDragEnd={handleHandleDragEnd}
-            display="visible"
+            display="hidden"
           />
         ))}
+
+        {/* contents */}
         <div className="h-full w-full bg-secondary">
           <div>{dialog.id}</div>
           <div>{dialog.activeTab}</div>

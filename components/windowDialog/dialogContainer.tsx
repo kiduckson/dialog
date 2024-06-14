@@ -2,8 +2,9 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { useRef, useEffect, useState, forwardRef } from "react";
-import { IDialog, useDialogStore } from "../../app/store";
+import { IDialog, useDialogStore, EnlargedType } from "../../app/store";
 import Dialog from "./dialog";
+import { MotionValue, PanInfo } from "framer-motion";
 
 export type IHandleClick =
   | React.MouseEvent<HTMLDivElement>
@@ -69,17 +70,18 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         const { clientWidth: containerWidth, clientHeight: containerHeight } =
           ref.current;
         const dialog = dialogs[dialogId];
+        const isSm = dialog.enlarged === "center";
         updateDialog({
           ...dialog,
-          enlarged: !dialog.enlarged,
-          x: dialog.enlarged ? dialog.prevX : 0,
-          y: dialog.enlarged ? dialog.prevY : 0,
-          prevX: dialog.enlarged ? dialog.prevX : dialog.x,
-          prevY: dialog.enlarged ? dialog.prevY : dialog.y,
-          width: dialog.enlarged ? dialog.prevWidth : containerWidth,
-          height: dialog.enlarged ? dialog.prevHeight : containerHeight,
-          prevWidth: dialog.enlarged ? dialog.prevWidth : dialog.width,
-          prevHeight: dialog.enlarged ? dialog.prevHeight : dialog.height,
+          enlarged: isSm ? "full" : "center",
+          x: !isSm ? dialog.prevX : 0,
+          y: !isSm ? dialog.prevY : 0,
+          prevX: !isSm ? dialog.prevX : dialog.x,
+          prevY: !isSm ? dialog.prevY : dialog.y,
+          width: !isSm ? dialog.prevWidth : containerWidth,
+          height: !isSm ? dialog.prevHeight : containerHeight,
+          prevWidth: !isSm ? dialog.prevWidth : dialog.width,
+          prevHeight: !isSm ? dialog.prevHeight : dialog.height,
         });
       }
     };
@@ -93,6 +95,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       e,
     }: IhandleTabBehaviourProps) => {
       if (!ref.current) return;
+
       const { clientWidth: containerWidth, clientHeight: containerHeight } =
         ref.current;
       const newDialogId = uuidv4();
@@ -242,13 +245,108 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         height: prevDialog.height,
         activeTab: tabId,
         tabs: [tabId],
-        enlarged: false,
+        enlarged: "center",
         prevWidth: prevDialog.width,
         prevHeight: prevDialog.width,
         prevX: x,
         prevY: y,
       });
       selectDialog(newDialogId);
+    };
+    // always horizontal first
+    function getFixedDiretion(
+      x: number,
+      y: number,
+      containerWidth: number,
+      containerHeight: number
+    ): [Exclude<EnlargedType, "full">, boolean] {
+      const leftCondition = x < -40;
+      const rightCondition = x > containerWidth + 40;
+      const topCondition = y < -20;
+      const bottomCondition = y > containerHeight + 20;
+
+      if (leftCondition) {
+      }
+
+      if (leftCondition && topCondition) return ["topLeft", true];
+      if (leftCondition && bottomCondition) return ["topRight", true];
+      if (leftCondition) return ["left", true];
+      if (x > containerWidth + 40) return ["right", true];
+      if (y < -40) return ["top", true];
+      if (y > containerHeight + 40) return ["bottom", true];
+      return ["center", false];
+    }
+
+    const handlePresetDialogSize = (
+      dialog: IDialog,
+      e: any,
+      info: PanInfo,
+      mx: number,
+      my: number
+    ) => {
+      const { x, y } = info.point;
+      const isEnd = e.type === "pointerup";
+
+      if (dialog && ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        const { containerHeight, containerWidth, containerX, containerY } = {
+          containerHeight: rect.height,
+          containerWidth: rect.width,
+          containerX: rect.left + window.scrollX,
+          containerY: rect.top + window.scrollY,
+        };
+
+        const adjustedX = x - containerX;
+        const adjustedY = y - containerY;
+
+        const [direction, displayPortal] = getFixedDiretion(
+          adjustedX,
+          adjustedY,
+          containerWidth,
+          containerHeight
+        );
+
+        const cordinates = {
+          x: direction === "right" ? containerWidth / 2 : 0,
+          y: direction === "bottom" ? containerHeight / 2 : 0,
+          width: ["right", "left"].includes(direction)
+            ? containerWidth / 2
+            : containerWidth,
+          height: ["top", "bottom"].includes(direction)
+            ? containerHeight / 2
+            : containerHeight,
+        };
+
+        setIndicatorDimension(cordinates);
+        setShowPortal(displayPortal);
+
+        if (!isEnd) return;
+
+        if (direction !== "center") {
+          setShowPortal(false);
+          updateDialog({
+            ...dialog,
+            ...cordinates,
+            enlarged: direction,
+          });
+        } else if (direction === "center" && dialog.enlarged !== "center") {
+          setShowPortal(false);
+          updateDialog({
+            ...dialog,
+            x: adjustedX,
+            y: adjustedY,
+            width: dialog.prevWidth,
+            height: dialog.prevHeight,
+            enlarged: "center",
+          });
+        } else {
+          updateDialog({
+            ...dialog,
+            x: mx,
+            y: my,
+          });
+        }
+      }
     };
 
     return (
@@ -266,6 +364,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             handleClick={handleClick}
             handleTabBehaviour={handleTabBehaviour}
             handleDoubleClick={handleDoubleClick}
+            handlePresetDialogSize={handlePresetDialogSize}
             displayIndicator={hoveredId === dialogId}
             indicatorIdx={hoveredIdx}
             showPortal={showPortal}

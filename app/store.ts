@@ -1,6 +1,18 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 
+export type EnlargedType =
+  | "left"
+  | "right"
+  | "top"
+  | "bottom"
+  | "topLeft"
+  | "topRight"
+  | "bottomLeft"
+  | "bottomRight"
+  | "full"
+  | "center";
+
 export interface IDialog {
   id: string;
   x: number;
@@ -9,7 +21,7 @@ export interface IDialog {
   height: number;
   activeTab: string;
   tabs: string[];
-  enlarged: boolean;
+  enlarged: EnlargedType;
   prevWidth: number;
   prevHeight: number;
   prevX: number;
@@ -57,6 +69,10 @@ export const useDialogStore = create<State & Action>()(
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
         title: "tab4",
       },
+      "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc": {
+        id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc",
+        title: "tab5",
+      },
     },
     dialogs: {
       "fa077d41-9786-457d-bf5a-2a85a4d9bbbb": {
@@ -71,8 +87,9 @@ export const useDialogStore = create<State & Action>()(
           "cce836b9-054f-4dec-ba99-34f35395e93e",
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
+          "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc",
         ],
-        enlarged: false,
+        enlarged: "center",
         prevHeight: 200,
         prevWidth: 400,
         prevX: 0,
@@ -97,9 +114,13 @@ export const useDialogStore = create<State & Action>()(
         state.dialogOrder = state.dialogOrder.filter((order) => order !== id);
         state.dialogs = remainingDialogs;
       }),
-    updateDialog: (newDialog: IDialog) =>
+    updateDialog: (dialog) =>
       set((state) => {
-        state.dialogs[newDialog.id] = { ...newDialog };
+        console.log("updating dialog", dialog);
+
+        return {
+          dialogs: { ...state.dialogs, [dialog.id]: dialog },
+        };
       }),
     setActiveDialog: (id: string) =>
       set((state) => {
