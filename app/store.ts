@@ -1,53 +1,12 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
+import type {
+  DialogStoreState,
+  DialogStoreActions,
+  DialogRecord,
+} from "@/components/windowDialog/types";
 
-export type EnlargedType =
-  | "left"
-  | "right"
-  | "top"
-  | "bottom"
-  | "topLeft"
-  | "topRight"
-  | "bottomLeft"
-  | "bottomRight"
-  | "full"
-  | "center";
-
-export interface IDialog {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  activeTab: string;
-  tabs: string[];
-  enlarged: boolean;
-  prevWidth: number;
-  prevHeight: number;
-  prevX: number;
-  prevY: number;
-}
-export interface Itab {
-  id: string;
-  title: string;
-}
-
-type State = {
-  dialogs: Record<string, IDialog>;
-  tabs: Record<string, Itab>;
-  length: number;
-  activeDialog: string;
-  dialogOrder: string[];
-};
-
-type Action = {
-  addDialog: (dialog: IDialog) => void;
-  removeDialog: (id: string) => void;
-  updateDialog: (newDialog: IDialog) => void;
-  selectDialog: (id: string | undefined) => void;
-};
-
-export const useDialogStore = create<State & Action>()(
+export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
   immer((set) => ({
     length: 0,
     activeDialog: "",
@@ -96,7 +55,7 @@ export const useDialogStore = create<State & Action>()(
         prevY: 0,
       },
     },
-    addDialog: (dialog: IDialog) =>
+    addDialog: (dialog: DialogRecord) =>
       set((state) => {
         if (dialog.id in state.dialogs) {
           return;

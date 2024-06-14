@@ -7,14 +7,14 @@ import {
   useMotionValue,
   useMotionValueEvent,
 } from "framer-motion";
-import React, { useEffect, useState, useMemo, useRef, forwardRef } from "react";
+import React, { useState, useMemo, useRef, forwardRef } from "react";
 
-import { IDialog, useDialogStore } from "@/app/store";
+import { useDialogStore } from "@/app/store";
+import type { DialogRecord, TabBehaviorProps } from "./types";
 import { cn } from "@/lib/utils";
 import { cva } from "class-variance-authority";
 import DialogHandle from "./dialogHandle";
 import Tab from "./tab";
-import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export enum ExpandDirection {
   top,
@@ -59,10 +59,10 @@ export const handleVariant = cva("absolute rounded-sm", {
 });
 
 interface IDialogProps {
-  dialog: IDialog;
+  dialog: DialogRecord;
   handleClick: any;
   selected: boolean;
-  handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
+  handleTabBehaviour: (props: TabBehaviorProps) => void;
   handleDoubleClick: React.MouseEventHandler<HTMLDivElement>;
   handlePresetDialogSize: any;
   displayIndicator: boolean;

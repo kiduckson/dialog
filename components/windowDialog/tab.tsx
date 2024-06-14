@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
-import { Itab, useDialogStore } from "@/app/store";
+import { useDialogStore } from "@/app/store";
+import type { DialogTab, TabBehaviorProps } from "./types";
 import { PanInfo, motion, useMotionValue } from "framer-motion";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import { IhandleTabBehaviourProps } from "./dialogContainer";
 
 export const tabVariant = cva(
   "relative flex justify-center items-center overflow-visible rounded-t-md corner px-4 min-w-18 w-18 max-w-18 h-full",
@@ -31,13 +31,13 @@ export const tabVariant = cva(
 );
 
 interface ITabProps {
-  tab: Itab;
+  tab: DialogTab;
   idx: number;
   dialogId: string;
   isDraggable: boolean;
   isActive: boolean;
 
-  handleTabBehaviour: (props: IhandleTabBehaviourProps) => void;
+  handleTabBehaviour: (props: TabBehaviorProps) => void;
   updateActiveTab: (id: string) => void;
   tabIndicator: "none" | "before" | "after";
   showPortal: boolean;
@@ -104,6 +104,8 @@ export default function Tab({
       onClick={selectTab}
       onPanStart={selectTab}
       onPan={(e, info) => {
+        console.log(e);
+
         handlePan(e, info);
       }}
       onPanEnd={(e, info) => {

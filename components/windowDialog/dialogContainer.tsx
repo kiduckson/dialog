@@ -2,47 +2,61 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { useRef, useEffect, useState, forwardRef } from "react";
-import { IDialog, useDialogStore, EnlargedType } from "../../app/store";
+import { useDialogStore } from "@/app/store";
+import type {
+  DialogEnlargedType,
+  DialogRecord,
+  DialogTab,
+  DialogStoreState,
+  DialogStoreActions,
+  DialogPosition,
+  DialogClickEvent,
+  TabBehaviorProps,
+  WindowDialogElement,
+  WindowDialogProps,
+} from "./types";
+
 import Dialog from "./dialog";
 import { MotionValue, PanInfo } from "framer-motion";
 
-export type IHandleClick =
-  | React.MouseEvent<HTMLDivElement>
-  | MouseEvent
-  | TouchEvent
-  | PointerEvent;
-
-export interface IhandleTabBehaviourProps {
-  dialogId: string;
-  tabId: string;
-  tabWidth: number;
-  ax: number;
-  ay: number;
-  e: PointerEvent;
-  info: PanInfo;
-}
-interface ICordinate extends Pick<IDialog, "x" | "y" | "width" | "height"> {}
+/**
+ * set state
+ * 1. dialogMove
+ *    - dialog to left border
+ *    - dialog to right border
+ *    - dialog to top border
+ *    - dialog to bottom border
+ * 2. tabMove
+ *    - tabMoveMerge
+ *    - tab
+ *
+ */
 
 const WINDOW_DIALOG_NAME = "WindowDialog";
 const X_THRESHOLD = 32;
 const Y_THRESHOLD = 64;
 const ENLARGE_THRESHOLD = 20;
 
-type WindowDialogElement = React.ElementRef<"div">;
-interface WindowDialogProps {
-  container?: HTMLElement | null;
-}
-
 const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
   (props, forwardedRef) => {
     const ref = useRef<HTMLDivElement>(null);
-    const dialogs = useDialogStore((state) => state.dialogs);
-    const dialogOrder = useDialogStore((state) => state.dialogOrder);
-    const selectDialog = useDialogStore((state) => state.selectDialog);
-    const activeDialog = useDialogStore((state) => state.activeDialog);
-    const updateDialog = useDialogStore((state) => state.updateDialog);
-    const removeDialog = useDialogStore((state) => state.removeDialog);
-    const addDialog = useDialogStore((state) => state.addDialog);
+    const {
+      dialogs,
+      dialogOrder,
+      selectDialog,
+      updateDialog,
+      removeDialog,
+      addDialog,
+      activeDialog,
+    } = useDialogStore((state) => ({
+      dialogs: state.dialogs,
+      dialogOrder: state.dialogOrder,
+      selectDialog: state.selectDialog,
+      updateDialog: state.updateDialog,
+      removeDialog: state.removeDialog,
+      addDialog: state.addDialog,
+      activeDialog: state.activeDialog,
+    }));
     const [hoveredId, setHoveredId] = useState<string>("");
     const [hoveredIdx, setHoveredIdx] = useState<number>(0);
     const [showPortal, setShowPortal] = useState(false);
@@ -53,7 +67,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       height: 200,
     });
 
-    const handleClick = (e: IHandleClick) => {
+    const handleClick = (e: DialogClickEvent) => {
       e.stopPropagation();
       let el: HTMLElement | null = e.target as HTMLElement;
       let id;
@@ -95,9 +109,9 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       tabWidth,
       ax,
       ay,
-      e,
+      event,
       info,
-    }: IhandleTabBehaviourProps) => {
+    }: TabBehaviorProps) => {
       if (!ref.current) return;
 
       const rect = ref.current.getBoundingClientRect();
@@ -110,9 +124,12 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 
       const adjustedX = info.point.x - containerX;
       const adjustedY = info.point.y - containerY;
+
+      console.log(adjustedX, ax);
+
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
-      const isEnd = e.type === "pointerup";
+      const isEnd = event.type === "pointerup";
 
       const dialogsArray = Object.values(dialogs);
       const [direction, displayPortal, cordinates] = getFixedDirection(
@@ -204,11 +221,11 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     };
 
     const findTargetDialog = (
-      dialogsArray: IDialog[],
+      dialogsArray: DialogRecord[],
       x: number,
       y: number,
       tabWidth: number
-    ): [IDialog | undefined, number] => {
+    ): [DialogRecord | undefined, number] => {
       const dialog = dialogsArray.find((dialog) => {
         const yThrest = dialog.y + X_THRESHOLD;
         const xThresh = dialog.x + dialog.width;
@@ -227,10 +244,10 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     };
 
     const mergeTabsToTargetDialog = (
-      targetDialog: IDialog,
+      targetDialog: DialogRecord,
       dialogId: string,
       tabId: string,
-      prevDialog: IDialog,
+      prevDialog: DialogRecord,
       tabIdx: number
     ) => {
       const newTabs = [...targetDialog.tabs];
@@ -275,7 +292,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     };
 
     const divideTabsIntoNewDialog = (
-      prevDialog: IDialog,
+      prevDialog: DialogRecord,
       newDialogId: string,
       tabId: string,
       x: number,
@@ -309,12 +326,14 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     };
 
     const handlePresetDialogSize = (
-      dialog: IDialog,
+      dialog: DialogRecord,
       e: any,
       info: PanInfo,
       mx: number,
       my: number
     ) => {
+      console.log(e.target);
+
       const { x, y } = info.point;
       const isEnd = e.type === "pointerup";
 
@@ -404,7 +423,7 @@ function getFixedDirection(
   y: number,
   containerWidth: number,
   containerHeight: number
-): [Exclude<EnlargedType, "full">, boolean, ICordinate] {
+): [Exclude<DialogEnlargedType, "full">, boolean, DialogPosition] {
   const leftCond = x < -ENLARGE_THRESHOLD;
   const rightCond = x > containerWidth + ENLARGE_THRESHOLD;
   const topCond = y < -ENLARGE_THRESHOLD / 2;
@@ -443,5 +462,9 @@ function getFixedDirection(
       : containerHeight,
   };
 
-  return [direction as Exclude<EnlargedType, "full">, display, cordinates];
+  return [
+    direction as Exclude<DialogEnlargedType, "full">,
+    display,
+    cordinates,
+  ];
 }
