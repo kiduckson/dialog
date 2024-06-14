@@ -254,26 +254,32 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       selectDialog(newDialogId);
     };
     // always horizontal first
-    function getFixedDiretion(
+    function getFixedDirection(
       x: number,
       y: number,
       containerWidth: number,
       containerHeight: number
     ): [Exclude<EnlargedType, "full">, boolean] {
-      const leftCondition = x < -40;
-      const rightCondition = x > containerWidth + 40;
-      const topCondition = y < -20;
-      const bottomCondition = y > containerHeight + 20;
+      const leftCond = x < -40;
+      const rightCond = x > containerWidth + 40;
+      const topCond = y < -20;
+      const bottomCond = y > containerHeight + 20;
 
-      if (leftCondition) {
+      const conditions = [
+        { cond: topCond && leftCond, direction: "topLeft" },
+        { cond: topCond && rightCond, direction: "topRight" },
+        { cond: bottomCond && leftCond, direction: "bottomLeft" },
+        { cond: bottomCond && rightCond, direction: "bottomRight" },
+        { cond: leftCond, direction: "left" },
+        { cond: rightCond, direction: "right" },
+        { cond: topCond, direction: "top" },
+        { cond: bottomCond, direction: "bottom" },
+      ];
+
+      for (const { cond, direction } of conditions) {
+        if (cond) return [direction as Exclude<EnlargedType, "full">, true];
       }
 
-      if (leftCondition && topCondition) return ["topLeft", true];
-      if (leftCondition && bottomCondition) return ["topRight", true];
-      if (leftCondition) return ["left", true];
-      if (x > containerWidth + 40) return ["right", true];
-      if (y < -40) return ["top", true];
-      if (y > containerHeight + 40) return ["bottom", true];
       return ["center", false];
     }
 
@@ -299,7 +305,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         const adjustedX = x - containerX;
         const adjustedY = y - containerY;
 
-        const [direction, displayPortal] = getFixedDiretion(
+        const [direction, displayPortal] = getFixedDirection(
           adjustedX,
           adjustedY,
           containerWidth,
