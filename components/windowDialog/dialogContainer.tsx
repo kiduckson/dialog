@@ -19,7 +19,9 @@ export interface IhandleTabBehaviourProps {
   ax: number;
   ay: number;
   e: PointerEvent;
+  info: PanInfo;
 }
+interface ICordinate extends Pick<IDialog, "x" | "y" | "width" | "height"> {}
 
 const WINDOW_DIALOG_NAME = "WindowDialog";
 const X_THRESHOLD = 32;
@@ -94,64 +96,110 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       ax,
       ay,
       e,
+      info,
     }: IhandleTabBehaviourProps) => {
       if (!ref.current) return;
 
-      const { clientWidth: containerWidth, clientHeight: containerHeight } =
-        ref.current;
+      const rect = ref.current.getBoundingClientRect();
+      const { containerHeight, containerWidth, containerX, containerY } = {
+        containerHeight: rect.height,
+        containerWidth: rect.width,
+        containerX: rect.left + window.scrollX,
+        containerY: rect.top + window.scrollY,
+      };
+
+      const adjustedX = info.point.x - containerX;
+      const adjustedY = info.point.y - containerY;
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
       const isEnd = e.type === "pointerup";
-      const isDividable = prevDialog.tabs.length > 1 && isEnd;
-
-      const calculateX =
-        prevDialog.x + ax < 0
-          ? 0
-          : prevDialog.x + ax + prevDialog.width > containerWidth
-          ? containerWidth - prevDialog.width
-          : prevDialog.x + ax;
-
-      const calculateY =
-        prevDialog.y + ay < 0
-          ? 0
-          : prevDialog.y + ay + prevDialog.height > containerHeight
-          ? containerHeight - prevDialog.height
-          : prevDialog.y + ay;
 
       const dialogsArray = Object.values(dialogs);
+      const [direction, displayPortal, cordinates] = getFixedDirection(
+        adjustedX,
+        adjustedY,
+        containerWidth,
+        containerHeight
+      );
       const [targetDialog, tabIdx] = findTargetDialog(
         dialogsArray,
         prevDialog.x + ax,
         prevDialog.y + ay,
         tabWidth
       );
+      /* 
+       1. center -> prv logic
+       2. if not center -> 
 
-      setHoveredId(targetDialog?.id || "");
-      setHoveredIdx(tabIdx);
-      setShowPortal(!targetDialog && !isEnd && prevDialog.tabs.length > 1);
-      setIndicatorDimension({
-        x: calculateX,
-        y: calculateY,
-        width: prevDialog.width,
-        height: prevDialog.height,
-      });
-      if (targetDialog && isEnd) {
-        mergeTabsToTargetDialog(
-          targetDialog,
-          dialogId,
-          tabId,
-          prevDialog,
-          tabIdx
-        );
-        setHoveredId("");
-      } else if (isDividable) {
+      */
+      if (direction !== "center" && !targetDialog) {
+        console.log("tab to fixed sive");
+
+        const { x, y, width, height } = cordinates;
+        setShowPortal(true);
+        setIndicatorDimension({
+          x,
+          y,
+          width,
+          height,
+        });
+        if (!isEnd) return;
+        setShowPortal(false);
         divideTabsIntoNewDialog(
+          prevDialog,
           newDialogId,
           tabId,
-          calculateX,
-          calculateY,
-          prevDialog
+          x,
+          y,
+          width,
+          height
         );
+      } else {
+        const calculateX =
+          prevDialog.x + ax < 0
+            ? 0
+            : prevDialog.x + ax + prevDialog.width > containerWidth
+            ? containerWidth - prevDialog.width
+            : prevDialog.x + ax;
+
+        const calculateY =
+          prevDialog.y + ay < 0
+            ? 0
+            : prevDialog.y + ay + prevDialog.height > containerHeight
+            ? containerHeight - prevDialog.height
+            : prevDialog.y + ay;
+
+        setHoveredId(targetDialog?.id || "");
+        setHoveredIdx(tabIdx);
+        setShowPortal(!targetDialog);
+        setIndicatorDimension({
+          x: calculateX,
+          y: calculateY,
+          width: prevDialog.width,
+          height: prevDialog.height,
+        });
+
+        if (!isEnd) return;
+
+        if (targetDialog) {
+          mergeTabsToTargetDialog(
+            targetDialog,
+            dialogId,
+            tabId,
+            prevDialog,
+            tabIdx
+          );
+          setHoveredId("");
+        } else {
+          divideTabsIntoNewDialog(
+            prevDialog,
+            newDialogId,
+            tabId,
+            calculateX,
+            calculateY
+          );
+        }
+        setShowPortal(false);
       }
     };
 
@@ -227,12 +275,17 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     };
 
     const divideTabsIntoNewDialog = (
+      prevDialog: IDialog,
       newDialogId: string,
       tabId: string,
       x: number,
       y: number,
-      prevDialog: IDialog
+      width?: number,
+      height?: number
     ) => {
+      if (prevDialog.tabs.length <= 1) {
+        removeDialog(prevDialog.id);
+      }
       updateDialog({
         ...prevDialog,
         tabs: prevDialog.tabs.filter((tab) => tab !== tabId),
@@ -242,47 +295,18 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         id: newDialogId,
         x,
         y,
-        width: prevDialog.width,
-        height: prevDialog.height,
+        width: width ?? prevDialog.width,
+        height: height ?? prevDialog.height,
         activeTab: tabId,
         tabs: [tabId],
         enlarged: false,
-        prevWidth: prevDialog.width,
-        prevHeight: prevDialog.width,
+        prevWidth: width ?? prevDialog.width,
+        prevHeight: height ?? prevDialog.height,
         prevX: x,
         prevY: y,
       });
       selectDialog(newDialogId);
     };
-    // always horizontal first
-    function getFixedDirection(
-      x: number,
-      y: number,
-      containerWidth: number,
-      containerHeight: number
-    ): [Exclude<EnlargedType, "full">, boolean] {
-      const leftCond = x < -ENLARGE_THRESHOLD;
-      const rightCond = x > containerWidth + ENLARGE_THRESHOLD;
-      const topCond = y < -ENLARGE_THRESHOLD / 2;
-      const bottomCond = y > containerHeight + ENLARGE_THRESHOLD / 2;
-
-      const conditions = [
-        { cond: topCond && leftCond, direction: "topLeft" },
-        { cond: topCond && rightCond, direction: "topRight" },
-        { cond: bottomCond && leftCond, direction: "bottomLeft" },
-        { cond: bottomCond && rightCond, direction: "bottomRight" },
-        { cond: leftCond, direction: "left" },
-        { cond: rightCond, direction: "right" },
-        { cond: topCond, direction: "top" },
-        { cond: bottomCond, direction: "bottom" },
-      ];
-
-      for (const { cond, direction } of conditions) {
-        if (cond) return [direction as Exclude<EnlargedType, "full">, true];
-      }
-
-      return ["center", false];
-    }
 
     const handlePresetDialogSize = (
       dialog: IDialog,
@@ -306,23 +330,12 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         const adjustedX = x - containerX;
         const adjustedY = y - containerY;
 
-        const [direction, displayPortal] = getFixedDirection(
+        const [direction, displayPortal, cordinates] = getFixedDirection(
           adjustedX,
           adjustedY,
           containerWidth,
           containerHeight
         );
-
-        const cordinates = {
-          x: /(right)/i.test(direction) ? containerWidth / 2 : 0,
-          y: /(bottom)/i.test(direction) ? containerHeight / 2 : 0,
-          width: /(right|left)/i.test(direction)
-            ? containerWidth / 2
-            : containerWidth,
-          height: /(top|bottom)/i.test(direction)
-            ? containerHeight / 2
-            : containerHeight,
-        };
 
         setIndicatorDimension(cordinates);
         setShowPortal(displayPortal);
@@ -383,3 +396,52 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 );
 
 export default DialogContainer;
+
+//// utils
+// always horizontal first
+function getFixedDirection(
+  x: number,
+  y: number,
+  containerWidth: number,
+  containerHeight: number
+): [Exclude<EnlargedType, "full">, boolean, ICordinate] {
+  const leftCond = x < -ENLARGE_THRESHOLD;
+  const rightCond = x > containerWidth + ENLARGE_THRESHOLD;
+  const topCond = y < -ENLARGE_THRESHOLD / 2;
+  const bottomCond = y > containerHeight + ENLARGE_THRESHOLD / 2;
+
+  const conditions = [
+    { cond: topCond && leftCond, direction: "topLeft" },
+    { cond: topCond && rightCond, direction: "topRight" },
+    { cond: bottomCond && leftCond, direction: "bottomLeft" },
+    { cond: bottomCond && rightCond, direction: "bottomRight" },
+    { cond: leftCond, direction: "left" },
+    { cond: rightCond, direction: "right" },
+    { cond: topCond, direction: "top" },
+    { cond: bottomCond, direction: "bottom" },
+  ];
+
+  let direction = "center";
+  let display = false;
+
+  for (const condition of conditions) {
+    if (condition.cond) {
+      direction = condition.direction;
+      display = true;
+      break;
+    }
+  }
+
+  const cordinates = {
+    x: /(right)/i.test(direction) ? containerWidth / 2 : 0,
+    y: /(bottom)/i.test(direction) ? containerHeight / 2 : 0,
+    width: /(right|left)/i.test(direction)
+      ? containerWidth / 2
+      : containerWidth,
+    height: /(top|bottom)/i.test(direction)
+      ? containerHeight / 2
+      : containerHeight,
+  };
+
+  return [direction as Exclude<EnlargedType, "full">, display, cordinates];
+}

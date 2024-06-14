@@ -77,6 +77,7 @@ export default function Tab({
         tabWidth,
         ax: info.offset.x + tabWidth * idx,
         ay: info.offset.y,
+        info,
         e,
       });
     }

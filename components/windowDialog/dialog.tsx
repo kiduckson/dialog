@@ -105,14 +105,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     const [dragSelected, setDragSelected] = useState(false);
 
     useMotionValueEvent(x, "change", (latest) => {
-      console.log(latest);
-
       setDragSelected(true);
     });
 
     useMotionValueEvent(y, "change", (latest) => {
-      console.log(latest);
-
       setDragSelected(true);
     });
     // x, y이동
@@ -206,7 +202,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         x: x.get(),
         width: width.get(),
         height: height.get(),
-        enlarged: "center",
+        enlarged: false,
       });
       selectDialog(dialog.id);
     };
@@ -277,12 +273,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         dragMomentum={false}
         dragControls={controls}
         onDrag={(e, info) => {
-          if (dialog.tabs.length > 1)
-            handlePresetDialogSize(dialog, e, info, x.get(), y.get());
+          handlePresetDialogSize(dialog, e, info, x.get(), y.get());
         }}
         onDragEnd={(e, info) => {
-          if (dialog.tabs.length > 1)
-            handlePresetDialogSize(dialog, e, info, x.get(), y.get());
+          handlePresetDialogSize(dialog, e, info, x.get(), y.get());
         }}
         dragListener={false}
         onClick={handleClick}
@@ -313,7 +307,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
                 tab={tabs[tabId]}
                 dialogId={dialog.id}
                 isActive={activeTab === tabId}
-                isDraggable={dialog.tabs.length > 1}
+                isDraggable={true}
                 handleTabBehaviour={handleTabBehaviour}
                 updateActiveTab={updateActiveTab}
                 tabIndicator={idxIndicator === idx ? pos : "none"}
