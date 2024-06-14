@@ -21,7 +21,7 @@ export interface IDialog {
   height: number;
   activeTab: string;
   tabs: string[];
-  enlarged: EnlargedType;
+  enlarged: boolean;
   prevWidth: number;
   prevHeight: number;
   prevX: number;
@@ -89,7 +89,7 @@ export const useDialogStore = create<State & Action>()(
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc",
         ],
-        enlarged: "center",
+        enlarged: false,
         prevHeight: 200,
         prevWidth: 400,
         prevX: 0,

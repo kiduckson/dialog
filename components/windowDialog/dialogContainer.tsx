@@ -24,6 +24,7 @@ export interface IhandleTabBehaviourProps {
 const WINDOW_DIALOG_NAME = "WindowDialog";
 const X_THRESHOLD = 32;
 const Y_THRESHOLD = 64;
+const ENLARGE_THRESHOLD = 20;
 
 type WindowDialogElement = React.ElementRef<"div">;
 interface WindowDialogProps {
@@ -70,10 +71,10 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         const { clientWidth: containerWidth, clientHeight: containerHeight } =
           ref.current;
         const dialog = dialogs[dialogId];
-        const isSm = dialog.enlarged === "center";
+        const isSm = !dialog.enlarged;
         updateDialog({
           ...dialog,
-          enlarged: isSm ? "full" : "center",
+          enlarged: isSm ? true : false,
           x: !isSm ? dialog.prevX : 0,
           y: !isSm ? dialog.prevY : 0,
           prevX: !isSm ? dialog.prevX : dialog.x,
@@ -245,7 +246,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         height: prevDialog.height,
         activeTab: tabId,
         tabs: [tabId],
-        enlarged: "center",
+        enlarged: false,
         prevWidth: prevDialog.width,
         prevHeight: prevDialog.width,
         prevX: x,
@@ -260,10 +261,10 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       containerWidth: number,
       containerHeight: number
     ): [Exclude<EnlargedType, "full">, boolean] {
-      const leftCond = x < -40;
-      const rightCond = x > containerWidth + 40;
-      const topCond = y < -20;
-      const bottomCond = y > containerHeight + 20;
+      const leftCond = x < -ENLARGE_THRESHOLD;
+      const rightCond = x > containerWidth + ENLARGE_THRESHOLD;
+      const topCond = y < -ENLARGE_THRESHOLD / 2;
+      const bottomCond = y > containerHeight + ENLARGE_THRESHOLD / 2;
 
       const conditions = [
         { cond: topCond && leftCond, direction: "topLeft" },
@@ -313,12 +314,12 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         );
 
         const cordinates = {
-          x: direction === "right" ? containerWidth / 2 : 0,
-          y: direction === "bottom" ? containerHeight / 2 : 0,
-          width: ["right", "left"].includes(direction)
+          x: /(right)/i.test(direction) ? containerWidth / 2 : 0,
+          y: /(bottom)/i.test(direction) ? containerHeight / 2 : 0,
+          width: /(right|left)/i.test(direction)
             ? containerWidth / 2
             : containerWidth,
-          height: ["top", "bottom"].includes(direction)
+          height: /(top|bottom)/i.test(direction)
             ? containerHeight / 2
             : containerHeight,
         };
@@ -333,17 +334,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
           updateDialog({
             ...dialog,
             ...cordinates,
-            enlarged: direction,
-          });
-        } else if (direction === "center" && dialog.enlarged !== "center") {
-          setShowPortal(false);
-          updateDialog({
-            ...dialog,
-            x: adjustedX,
-            y: adjustedY,
-            width: dialog.prevWidth,
-            height: dialog.prevHeight,
-            enlarged: "center",
+            enlarged: false,
           });
         } else {
           updateDialog({
@@ -378,7 +369,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         ))}
         {showPortal && (
           <div
-            className="absolute top-0 left-0 rounded-md border-2 bg-secondary/80 shadow-sm z-20"
+            className="absolute top-0 left-0 rounded-md border-2 border-green-500 bg-green-500/40 shadow-sm  shadow-green-300 z-20"
             style={{
               width: indicatorDimension.width,
               height: indicatorDimension.height,
