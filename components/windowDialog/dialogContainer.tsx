@@ -330,8 +330,6 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       mx: number,
       my: number
     ) => {
-      console.log(e.target);
-
       const { x, y } = info.point;
       const isEnd = e.type === "pointerup";
 
