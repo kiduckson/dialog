@@ -248,7 +248,9 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       <motion.div
         className={cn(
           "absolute top-0 left-0 flex flex-col bg-accent border rounded-sm",
-          selected ? "shadow-md" : "shadow-sm"
+          selected ? "shadow-md" : "shadow-sm",
+          dragSelected &&
+            "after:content-[''] after:absolute after:inset-0 after:rounded-sm after:z-10 after:bg-slate-300/25"
         )}
         style={{
           x,
@@ -290,9 +292,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         {/* headers */}
         <motion.div
           // layout
-          className={`dialog-handle flex items-center relative justify-between h-10 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b ${
-            dragSelected && "bg-primary/25"
-          }`}
+          className={`dialog-handle flex items-center relative justify-between h-6 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
           data-dialog-id={dialog.id}
@@ -302,7 +302,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
           style={{ touchAction: "none" }}
         >
           {/* tabs */}
-          <motion.div layout className="flex gap-1 max-w-[80%] h-full pt-1">
+          <motion.div
+            layout
+            className="flex gap-1 max-w-[80%] items-center overflow-x-auto snap-x h-full py-1 pr-4"
+          >
             {dialog.tabs.map((tabId, idx) => (
               <Tab
                 key={tabId}
@@ -333,8 +336,8 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         ))}
 
         {/* contents */}
-        <div className="h-full w-full bg-secondary">
-          <div className="font-black bg-red-500 text-primary-foreground p-2 rounded-sm">{`dialog ID: ${dialog.id}`}</div>
+        <div className="h-full w-full ">
+          <div className="font-black text-green-700 dark:text-green-100 p-2 rounded-sm">{`dialog ID: ${dialog.id}`}</div>
           <div>{dialog.activeTab}</div>
         </div>
       </motion.div>

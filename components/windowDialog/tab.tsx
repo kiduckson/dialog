@@ -6,20 +6,21 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 export const tabVariant = cva(
-  "relative flex justify-center items-center overflow-visible rounded-t-md corner px-4 min-w-16 w-16 max-w-16 h-full",
+  "relative flex items-center gap-1 text-sm capitalize min-w-max h-max w-max hover:bg-slate-800/20  hover:dark:bg-slate-300/20 rounded-sm before:content-[''] before:block before:h-[12px] before:left-[-1px] before:absolute before:top-1/2 before:transform before:-translate-y-1/2 before:w-[1px] before:bg-muted-foreground",
   {
     variants: {
       variant: {
-        default: "bg-muted z-0 hover:brightness-90",
-        active: "bg-accent-foreground text-secondary z-10 hover:brightness-90",
+        default: "z-0 [&>.selected]:opacity-0",
+        active: "font-black text-primary z-10 [&>.unselected]:opacity-0 ",
         minimized: "invisible",
       },
+
       indicator: {
         none: "",
         after:
           "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-right-1",
         before:
-          "before:content-[''] before:absolute before:h-full before:w-1 before:bg-muted-foreground before:-left-1",
+          "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-left-1",
       },
     },
     defaultVariants: {
@@ -51,7 +52,6 @@ export default function Tab({
   handleTabBehaviour,
   updateActiveTab,
   tabIndicator,
-  showPortal,
 }: ITabProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const x = useMotionValue(0);
@@ -60,7 +60,6 @@ export default function Tab({
   const [selected, setSelected] = useState(false);
 
   const tabWidth = ref.current?.clientWidth ?? 96;
-  const computedSelected = isActive && showPortal && selected;
 
   const selectTab = () => {
     selectDialog(dialogId);
@@ -115,7 +114,12 @@ export default function Tab({
       whileTap={{ scale: 1.02 }}
       tabIndex={-1}
     >
-      {tab.title}
+      <span className="selected whitespace-nowrap font-black px-2 py-1">
+        {tab.title}
+      </span>
+      <span className="unselected absolute left-0 top-0 whitespace-nowrap font-normal px-2 py-1">
+        {tab.title}
+      </span>
     </motion.span>
   );
 }

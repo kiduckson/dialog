@@ -14,7 +14,7 @@ import type {
 } from "./types";
 
 import Dialog from "./dialog";
-import { MotionValue, PanInfo } from "framer-motion";
+import { AnimatePresence, MotionValue, PanInfo } from "framer-motion";
 
 /**
  */
@@ -378,7 +378,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 
     return (
       <div
-        className="relative border border-t-0"
+        className="relative border-r border-b"
         ref={ref}
         onClick={handleClick}
       >
