@@ -36,8 +36,8 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
     dialogs: {
       "fa077d41-9786-457d-bf5a-2a85a4d9bbbb": {
         id: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        x: 0,
-        y: 0,
+        x: 200,
+        y: 200,
         width: 400,
         height: 200,
         activeTab: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
@@ -48,6 +48,7 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
           "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc",
         ],
+        enlargeType: "center",
         enlarged: false,
         prevHeight: 200,
         prevWidth: 400,
@@ -61,6 +62,7 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
           return;
         }
         state.dialogs[dialog.id] = dialog;
+        state.dialogOrder = [dialog.id, ...state.dialogOrder];
       }),
     removeDialog: (id: string) =>
       set((state) => {
@@ -75,10 +77,9 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
       }),
     updateDialog: (dialog) =>
       set((state) => {
-        console.log("updating dialog", dialog);
-
+        // console.log("updating dialog", dialog);
         return {
-          dialogs: { ...state.dialogs, [dialog.id]: dialog },
+          dialogs: { ...state.dialogs, [dialog.id]: { ...dialog } },
         };
       }),
     setActiveDialog: (id: string) =>

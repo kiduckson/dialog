@@ -2,17 +2,41 @@
 
 import DialogContainer from "@/components/windowDialog/dialogContainer";
 import Link from "next/link";
+import { useDialogStore } from "./store";
 
 export default function Home() {
+  const selectdDialog = useDialogStore((state) => state.activeDialog);
+  const dialogs = useDialogStore((state) => state.dialogs);
+  const dialogOrder = useDialogStore((state) => state.dialogOrder);
   return (
     <>
-      <nav className="flex justify-between items-center w-full h-8 bg-background border">
+      <nav className="grid grid-cols-[6rem_1fr_40px] w-full h-10 border-b items-center gap-x-1">
         <Link
           href="/"
-          className="border-r w-24 h-full flex items-center justify-center font-bold"
+          className="flex justify-center items-center w-full h-full border-r font-bold"
         >
           HOME
         </Link>
+        <div className="flex px-4 gap-x-3 items-center">
+          <div className="flex gap-x-1 items-center">
+            <span className="text-primary font-bold">Selected </span>
+            <span className="rounded-full px-2 py-1 bg-slate-300">
+              {selectdDialog === "" ? "----" : selectdDialog}
+            </span>
+          </div>
+          <div className="flex gap-x-1 items-center">
+            <span className="text-primary font-bold">Dialog Order Count </span>
+            <span className="rounded-full px-2 py-1 bg-slate-300">
+              {dialogOrder.length}
+            </span>
+          </div>
+          <div className="flex gap-x-1 items-center">
+            <span className="text-primary font-bold">Dialogs Count </span>
+            <span className="rounded-full px-2 py-1 bg-slate-300">
+              {Object.keys(dialogs).length}
+            </span>
+          </div>
+        </div>
       </nav>
       <div className="grid grid-cols-[auto_1fr_40px] grid-rows-[auto_40px] w-full h-full">
         <div className="text-4xl p-2 w-24 border-l border-b">TEST</div>

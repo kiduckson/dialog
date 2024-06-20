@@ -1,7 +1,7 @@
 "use client";
 
 import { v4 as uuidv4 } from "uuid";
-import { useRef, useState, forwardRef } from "react";
+import { useRef, useState, forwardRef, useEffect } from "react";
 import { useDialogStore } from "@/app/store";
 import type {
   DialogEnlargedType,
@@ -17,18 +17,6 @@ import Dialog from "./dialog";
 import { MotionValue, PanInfo } from "framer-motion";
 
 /**
- * TODO:
- * set state
- * 1. dialogMove
- *    - dialog to left border
- *    - dialog to right border
- *    - dialog to top border
- *    - dialog to bottom border
- * 2. tabMove
- *    - tabMoveMerge
- *    - tab
- * TODO:
- * 탭위치가 머지 에어리어에 들어 왔을때 0.2초이상 스테이시 해당 윈도우 선택
  */
 
 const X_THRESHOLD = 32;
@@ -58,12 +46,18 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     const [hoveredId, setHoveredId] = useState<string>("");
     const [hoveredIdx, setHoveredIdx] = useState<number>(0);
     const [showPortal, setShowPortal] = useState(false);
+    const [showTabPortal, setShowTabPortal] = useState(false);
+    const [tabIndicatorD, setTabIndicatorD] = useState({ x: 0, y: 0 });
     const [indicatorDimension, setIndicatorDimension] = useState({
       x: 0,
       y: 0,
       width: 200,
       height: 200,
     });
+
+    useEffect(() => {
+      selectDialog(hoveredId);
+    }, [hoveredId]);
 
     const handleClick = (e: DialogClickEvent) => {
       e.stopPropagation();
@@ -111,7 +105,6 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       e,
     }: TabBehaviorProps) => {
       if (!ref.current) return;
-
       const rect = ref.current.getBoundingClientRect();
       const { containerHeight, containerWidth, containerX, containerY } = {
         containerHeight: rect.height,
@@ -120,14 +113,27 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         containerY: rect.top + window.scrollY,
       };
 
-      const adjustedX = info.point.x - containerX;
-      const adjustedY = info.point.y - containerY;
-
-      console.log(adjustedX, ax);
-
       const newDialogId = uuidv4();
       const prevDialog = dialogs[dialogId];
       const isEnd = e.type === "pointerup";
+      const adjustedX = info.point.x - containerX;
+      const adjustedY = info.point.y - containerY;
+      const calculateX =
+        prevDialog.x + ax < 0
+          ? 0
+          : prevDialog.x + ax + prevDialog.width > containerWidth
+          ? containerWidth - prevDialog.width
+          : prevDialog.x + ax;
+
+      const calculateY =
+        prevDialog.y + ay < 0
+          ? 0
+          : prevDialog.y + ay + prevDialog.height > containerHeight
+          ? containerHeight - prevDialog.height
+          : prevDialog.y + ay;
+
+      setShowTabPortal(true);
+      setTabIndicatorD({ x: adjustedX, y: adjustedY });
 
       const dialogsArray = Object.values(dialogs);
       const [direction, displayPortal, cordinates] = getFixedDirection(
@@ -138,18 +144,12 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       );
       const [targetDialog, tabIdx] = findTargetDialog(
         dialogsArray,
-        prevDialog.x + ax,
-        prevDialog.y + ay,
+        adjustedX,
+        adjustedY,
         tabWidth
       );
-      /* 
-       1. center -> prv logic
-       2. if not center -> 
 
-      */
       if (direction !== "center" && !targetDialog) {
-        console.log("tab to fixed sive");
-
         const { x, y, width, height } = cordinates;
         setShowPortal(true);
         setIndicatorDimension({
@@ -160,6 +160,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         });
         if (!isEnd) return;
         setShowPortal(false);
+
         divideTabsIntoNewDialog(
           prevDialog,
           newDialogId,
@@ -167,23 +168,10 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
           x,
           y,
           width,
-          height
+          height,
+          direction
         );
       } else {
-        const calculateX =
-          prevDialog.x + ax < 0
-            ? 0
-            : prevDialog.x + ax + prevDialog.width > containerWidth
-            ? containerWidth - prevDialog.width
-            : prevDialog.x + ax;
-
-        const calculateY =
-          prevDialog.y + ay < 0
-            ? 0
-            : prevDialog.y + ay + prevDialog.height > containerHeight
-            ? containerHeight - prevDialog.height
-            : prevDialog.y + ay;
-
         setHoveredId(targetDialog?.id || "");
         setHoveredIdx(tabIdx);
         setShowPortal(!targetDialog);
@@ -216,6 +204,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         }
         setShowPortal(false);
       }
+      setShowTabPortal(false);
     };
 
     const findTargetDialog = (
@@ -248,6 +237,8 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       prevDialog: DialogRecord,
       tabIdx: number
     ) => {
+      console.log("mergeTabsToTargetDialog");
+
       const newTabs = [...targetDialog.tabs];
       if (targetDialog.id === dialogId) {
         // Remove the tab from its current position
@@ -266,7 +257,6 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         };
 
         updateDialog(newDialog);
-        selectDialog(newDialog.id);
       } else {
         newTabs.splice(tabIdx, 0, tabId);
 
@@ -285,7 +275,6 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
         } else {
           removeDialog(dialogId);
         }
-        selectDialog(newDialog.id);
       }
     };
 
@@ -296,31 +285,42 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       x: number,
       y: number,
       width?: number,
-      height?: number
+      height?: number,
+      enlargeType: DialogEnlargedType = "center"
     ) => {
-      if (prevDialog.tabs.length <= 1) {
-        removeDialog(prevDialog.id);
-      }
-      updateDialog({
-        ...prevDialog,
-        tabs: prevDialog.tabs.filter((tab) => tab !== tabId),
-      });
+      if (prevDialog.tabs.length < 2) {
+        updateDialog({
+          ...prevDialog,
+          x,
+          y,
+          width: width ?? prevDialog.width,
+          height: height ?? prevDialog.height,
+          enlargeType,
+        });
+        selectDialog(prevDialog.id);
+      } else {
+        updateDialog({
+          ...prevDialog,
+          tabs: prevDialog.tabs.filter((tab) => tab !== tabId),
+        });
 
-      addDialog({
-        id: newDialogId,
-        x,
-        y,
-        width: width ?? prevDialog.width,
-        height: height ?? prevDialog.height,
-        activeTab: tabId,
-        tabs: [tabId],
-        enlarged: false,
-        prevWidth: width ?? prevDialog.width,
-        prevHeight: height ?? prevDialog.height,
-        prevX: x,
-        prevY: y,
-      });
-      selectDialog(newDialogId);
+        addDialog({
+          id: newDialogId,
+          x,
+          y,
+          width: width ?? prevDialog.width,
+          height: height ?? prevDialog.height,
+          activeTab: tabId,
+          tabs: [tabId],
+          enlarged: false,
+          enlargeType,
+          prevWidth: width ?? prevDialog.width,
+          prevHeight: height ?? prevDialog.height,
+          prevX: x,
+          prevY: y,
+        });
+        selectDialog(newDialogId);
+      }
     };
 
     const handlePresetDialogSize = (
@@ -363,10 +363,12 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             ...dialog,
             ...cordinates,
             enlarged: false,
+            enlargeType: direction,
           });
         } else {
           updateDialog({
             ...dialog,
+            enlargeType: direction,
             x: mx,
             y: my,
           });
@@ -395,6 +397,14 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
             showPortal={showPortal}
           />
         ))}
+        {showTabPortal && !showPortal && (
+          <span
+            className="absolute top-0 left-0 rounded-sm w-16 h-10 border-2 border-green-500 bg-green-500/40 shadow-sm shadow-green-300 z-20"
+            style={{
+              transform: `translateX(${tabIndicatorD.x}px) translateY(${tabIndicatorD.y}px) translateZ(0px)`,
+            }}
+          />
+        )}
         {showPortal && (
           <div
             className="absolute top-0 left-0 rounded-md border-2 border-green-500 bg-green-500/40 shadow-sm  shadow-green-300 z-20"

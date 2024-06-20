@@ -105,18 +105,26 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     const [dragSelected, setDragSelected] = useState(false);
 
     useMotionValueEvent(x, "change", (latest) => {
+      // console.log("useMotionValueEvent change x", latest, dialog.enlargeType);
       setDragSelected(true);
     });
 
     useMotionValueEvent(y, "change", (latest) => {
+      // console.log("useMotionValueEvent change y", latest, dialog.enlargeType);
       setDragSelected(true);
     });
     // x, y이동
     useMotionValueEvent(x, "animationComplete", () => {
+      if (["top", "left", "topLeft", "bottom"].includes(dialog.enlargeType)) {
+        x.set(0);
+      }
       setDragSelected(false);
     });
 
     useMotionValueEvent(y, "animationComplete", () => {
+      if (["top", "left", "topLeft", "right"].includes(dialog.enlargeType)) {
+        y.set(0);
+      }
       setDragSelected(false);
     });
 
@@ -203,6 +211,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         width: width.get(),
         height: height.get(),
         enlarged: false,
+        enlargeType: "center",
       });
       selectDialog(dialog.id);
     };
@@ -254,12 +263,6 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
             duration: 0.2,
           },
         }}
-        initial={{
-          x: dialog.x,
-          y: dialog.y,
-          width: dialog.width,
-          height: dialog.height,
-        }}
         animate={{
           x: dialog.x,
           y: dialog.y,
@@ -286,7 +289,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
       >
         {/* headers */}
         <motion.div
-          layout
+          // layout
           className={`dialog-handle flex items-center relative justify-between h-10 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b ${
             dragSelected && "bg-primary/25"
           }`}
@@ -331,7 +334,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
 
         {/* contents */}
         <div className="h-full w-full bg-secondary">
-          <div>{dialog.id}</div>
+          <div className="font-black bg-red-500 text-primary-foreground p-2 rounded-sm">{`dialog ID: ${dialog.id}`}</div>
           <div>{dialog.activeTab}</div>
         </div>
       </motion.div>

@@ -25,6 +25,7 @@ export interface DialogRecord {
   prevHeight: number;
   prevX: number;
   prevY: number;
+  enlargeType: DialogEnlargedType;
 }
 
 export interface DialogTab {
@@ -63,7 +64,7 @@ export interface TabBehaviorProps {
   ax: number;
   ay: number;
   info: PanInfo;
-  e: PointerEvent;
+  e: DialogClickEvent;
 }
 
 export type WindowDialogElement = React.ElementRef<"div">;

@@ -1,19 +1,18 @@
 import { useRef, useState } from "react";
 import { useDialogStore } from "@/app/store";
-import type { DialogTab, TabBehaviorProps } from "./types";
+import type { DialogTab, TabBehaviorProps, DialogClickEvent } from "./types";
 import { PanInfo, motion, useMotionValue } from "framer-motion";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 export const tabVariant = cva(
-  "relative flex justify-center items-center overflow-visible rounded-t-md corner px-4 min-w-18 w-18 max-w-18 h-full",
+  "relative flex justify-center items-center overflow-visible rounded-t-md corner px-4 min-w-16 w-16 max-w-16 h-full",
   {
     variants: {
       variant: {
         default: "bg-muted z-0 hover:brightness-90",
         active: "bg-accent-foreground text-secondary z-10 hover:brightness-90",
-        minimized:
-          "bg-muted/90 rounded-full w-4 h-4 cursor-grabbing px-0 min-w-0 z-20",
+        minimized: "invisible",
       },
       indicator: {
         none: "",
@@ -64,12 +63,11 @@ export default function Tab({
   const computedSelected = isActive && showPortal && selected;
 
   const selectTab = () => {
-    setSelected(true);
     selectDialog(dialogId);
     updateActiveTab(tab.id);
   };
 
-  const handlePan = (e: PointerEvent, info: PanInfo) => {
+  const handleDrag = (e: DialogClickEvent, info: PanInfo) => {
     if (ref.current) {
       handleTabBehaviour({
         dialogId,
@@ -82,16 +80,13 @@ export default function Tab({
       });
     }
   };
+
   return (
     <motion.span
       ref={ref}
       className={cn(
         tabVariant({
-          variant: computedSelected
-            ? "minimized"
-            : isActive
-            ? "active"
-            : "default",
+          variant: selected ? "minimized" : isActive ? "active" : "default",
           indicator: tabIndicator,
         })
       )}
@@ -102,12 +97,15 @@ export default function Tab({
       }}
       layout
       onClick={selectTab}
-      onPanStart={selectTab}
-      onPan={(e, info) => {
-        handlePan(e, info);
+      onDragStart={() => {
+        selectTab();
+        setSelected(true);
       }}
-      onPanEnd={(e, info) => {
-        handlePan(e, info);
+      onDrag={(e, info) => {
+        handleDrag(e, info);
+      }}
+      onDragEnd={(e, info) => {
+        handleDrag(e, info);
         setSelected(false);
       }}
       dragElastic={false}
@@ -117,7 +115,7 @@ export default function Tab({
       whileTap={{ scale: 1.02 }}
       tabIndex={-1}
     >
-      {!computedSelected && tab.title}
+      {tab.title}
     </motion.span>
   );
 }
