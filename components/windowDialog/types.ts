@@ -31,6 +31,8 @@ export interface DialogRecord {
 export interface DialogTab {
   id: string;
   title: string;
+  dialogId: string;
+  width: number;
 }
 
 export type DialogStoreState = {

@@ -14,30 +14,40 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
     tabs: {
       "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b": {
         id: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
-        title: "tab1",
+        title: "🐈 this is the name of the tab",
+        dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
+        width: 96,
       },
       "cce836b9-054f-4dec-ba99-34f35395e93e": {
         id: "cce836b9-054f-4dec-ba99-34f35395e93e",
         title: "tab2",
+        dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
+        width: 96,
       },
       "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
         title: "tab3",
+        dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
+        width: 96,
       },
       "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
         title: "tab4",
+        dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
+        width: 96,
       },
       "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc",
         title: "tab5",
+        dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
+        width: 96,
       },
     },
     dialogs: {
       "fa077d41-9786-457d-bf5a-2a85a4d9bbbb": {
         id: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        x: 200,
-        y: 200,
+        x: 0,
+        y: 0,
         width: 400,
         height: 200,
         activeTab: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",

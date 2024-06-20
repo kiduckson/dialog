@@ -6,7 +6,7 @@ import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 export const tabVariant = cva(
-  "relative flex items-center gap-1 text-sm capitalize min-w-max h-max w-max hover:bg-slate-800/20  hover:dark:bg-slate-300/20 rounded-sm before:content-[''] before:block before:h-[12px] before:left-[-1px] before:absolute before:top-1/2 before:transform before:-translate-y-1/2 before:w-[1px] before:bg-muted-foreground",
+  "relative flex items-center gap-1 text-sm capitalize min-w-max h-max w-max overflow-visible hover:bg-slate-800/20  hover:dark:bg-slate-300/20 rounded-sm before:content-[''] before:block before:h-[12px] before:left-[-1px] before:absolute before:top-1/2 before:transform before:-translate-y-1/2 before:w-[1px] before:bg-muted-foreground",
   {
     variants: {
       variant: {
@@ -114,10 +114,10 @@ export default function Tab({
       whileTap={{ scale: 1.02 }}
       tabIndex={-1}
     >
-      <span className="selected whitespace-nowrap font-black px-2 py-1">
+      <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px]">
         {tab.title}
       </span>
-      <span className="unselected absolute left-0 top-0 whitespace-nowrap font-normal px-2 py-1">
+      <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px]">
         {tab.title}
       </span>
     </motion.span>
