@@ -32,6 +32,8 @@ export interface DialogTab {
   id: string;
   title: string;
   dialogId: string;
+  x: number;
+  y: number;
   width: number;
 }
 
@@ -47,6 +49,9 @@ export type DialogStoreActions = {
   addDialog: (dialog: DialogRecord) => void;
   removeDialog: (id: string) => void;
   updateDialog: (newDialog: DialogRecord) => void;
+  addTab: (tab: DialogTab, dialogId: string) => void;
+  removeTab: (id: string) => void;
+  updateTab: (newTab: DialogTab) => void;
   selectDialog: (id: string | undefined) => void;
 };
 
@@ -62,9 +67,6 @@ export type DialogClickEvent =
 export interface TabBehaviorProps {
   dialogId: string;
   tabId: string;
-  tabWidth: number;
-  ax: number;
-  ay: number;
   info: PanInfo;
   e: DialogClickEvent;
 }

@@ -252,10 +252,8 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     return (
       <motion.div
         className={cn(
-          "absolute top-0 left-0 flex flex-col bg-accent border border-border rounded-sm",
-          selected ? "shadow-md" : "shadow-sm"
-          // dragSelected &&
-          //   "after:content-[''] after:absolute after:inset-0 after:rounded-sm after:z-10 after:bg-slate-300/25"
+          "absolute top-0 left-0 flex flex-col bg-accent border border-border rounded-sm shadow-border",
+          selected && "shadow-sm border-primary/25"
         )}
         style={{
           x,

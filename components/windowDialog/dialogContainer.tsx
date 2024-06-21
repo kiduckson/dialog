@@ -11,6 +11,7 @@ import type {
   TabBehaviorProps,
   WindowDialogElement,
   WindowDialogProps,
+  DialogTab,
 } from "./types";
 
 import Dialog from "./dialog";
@@ -19,14 +20,16 @@ import { AnimatePresence, MotionValue, PanInfo } from "framer-motion";
 /**
  */
 
-const X_THRESHOLD = 32;
-const Y_THRESHOLD = 64;
+const X_THRESHOLD = 8;
+const Y_THRESHOLD = 4;
 const ENLARGE_THRESHOLD = 20;
+const TAB_HEIGHT = 24;
 
 const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
   (props, forwardedRef) => {
     const ref = useRef<HTMLDivElement>(null);
     const {
+      tabs,
       dialogs,
       dialogOrder,
       selectDialog,
@@ -35,6 +38,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       addDialog,
       activeDialog,
     } = useDialogStore((state) => ({
+      tabs: state.tabs,
       dialogs: state.dialogs,
       dialogOrder: state.dialogOrder,
       selectDialog: state.selectDialog,
@@ -98,14 +102,13 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
     const handleTabBehaviour = ({
       dialogId,
       tabId,
-      tabWidth,
-      ax,
-      ay,
       info,
       e,
     }: TabBehaviorProps) => {
       if (!ref.current) return;
       const rect = ref.current.getBoundingClientRect();
+      const { x: ax, y: ay } = info.offset;
+      const { x: mx, y: my } = info.point;
       const { containerHeight, containerWidth, containerX, containerY } = {
         containerHeight: rect.height,
         containerWidth: rect.width,
@@ -136,17 +139,25 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       setTabIndicatorD({ x: adjustedX, y: adjustedY });
 
       const dialogsArray = Object.values(dialogs);
+      const tabsArray = Object.values(tabs);
       const [direction, displayPortal, cordinates] = getFixedDirection(
         adjustedX,
         adjustedY,
         containerWidth,
         containerHeight
       );
+
+      /**
+       * 0 .save tab dimention to the store
+       * 1. find the tab from the all the tabs
+       * 2.
+       */
+
       const [targetDialog, tabIdx] = findTargetDialog(
-        dialogsArray,
+        tabId,
+        tabsArray,
         adjustedX,
-        adjustedY,
-        tabWidth
+        adjustedY
       );
 
       if (direction !== "center" && !targetDialog) {
@@ -207,27 +218,34 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
       setShowTabPortal(false);
     };
 
-    const findTargetDialog = (
-      dialogsArray: DialogRecord[],
-      x: number,
-      y: number,
-      tabWidth: number
-    ): [DialogRecord | undefined, number] => {
-      const dialog = dialogsArray.find((dialog) => {
-        const yThrest = dialog.y + X_THRESHOLD;
-        const xThresh = dialog.x + dialog.width;
-        const inXRange = dialog.x - Y_THRESHOLD < x && xThresh > x;
-        const inYRange = dialog.y - Y_THRESHOLD < y && yThrest > y;
-        return inXRange && inYRange;
-      });
-      const tabIdx = dialog
-        ? Math.max(
-            Math.min(Math.round((x - dialog.x) / tabWidth), dialog.tabs.length),
-            0
-          )
-        : 0;
+    // Object.values(tabs).forEach((tab) => console.log(tab.x, tab.y));
 
-      return [dialog, tabIdx];
+    const findTargetDialog = (
+      tabId: string,
+      tabsArray: DialogTab[],
+      x: number,
+      y: number
+    ): [DialogRecord | undefined, number] => {
+      let targetIdx = -1;
+      console.log(tabsArray);
+
+      const tab = tabsArray.find((tab, idx) => {
+        if (tab.id !== tabId) {
+          const top = tab.y - Y_THRESHOLD;
+          const left = tab.x - X_THRESHOLD;
+          const bottom = tab.y + TAB_HEIGHT + Y_THRESHOLD;
+          const right = tab.x + tab.width + X_THRESHOLD;
+          const inY = top < y && y > bottom;
+          const inX = left < x && x > right;
+          if (inY && inX) {
+            targetIdx = left + right / 2 < x ? idx + 1 : idx;
+            return true;
+          }
+        }
+      });
+      console.log(tab);
+
+      return [tab ? dialogs[tab.dialogId] : undefined, targetIdx];
     };
 
     const mergeTabsToTargetDialog = (

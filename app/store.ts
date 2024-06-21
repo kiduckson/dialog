@@ -4,7 +4,9 @@ import type {
   DialogStoreState,
   DialogStoreActions,
   DialogRecord,
+  DialogTab,
 } from "@/components/windowDialog/types";
+import Tab from "@/components/windowDialog/tab";
 
 export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
   immer((set) => ({
@@ -16,31 +18,41 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
         id: "9d7a54f2-60e8-4e49-81c8-1319bc9b4b3b",
         title: "🐈 this is the name of the tab",
         dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        width: 96,
+        x: 0,
+        y: 0,
+        width: 140,
       },
       "cce836b9-054f-4dec-ba99-34f35395e93e": {
         id: "cce836b9-054f-4dec-ba99-34f35395e93e",
         title: "🐶 dog is the tab of the tabs",
         dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        width: 96,
+        x: 0,
+        y: 0,
+        width: 140,
       },
       "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fa",
         title: "🐵 monkey is the tab of the tab",
         dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        width: 96,
+        x: 0,
+        y: 0,
+        width: 140,
       },
       "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fb",
         title: "📏 short tab",
         dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        width: 96,
+        x: 0,
+        y: 0,
+        width: 140,
       },
       "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc": {
         id: "f7e97e9b-9a24-44f0-8a6e-0d6d6e3428fc",
         title: "1",
         dialogId: "fa077d41-9786-457d-bf5a-2a85a4d9bbbb",
-        width: 96,
+        x: 0,
+        y: 0,
+        width: 140,
       },
     },
     dialogs: {
@@ -66,6 +78,35 @@ export const useDialogStore = create<DialogStoreState & DialogStoreActions>()(
         prevY: 0,
       },
     },
+    updateTab: (tab: DialogTab) =>
+      set((state) => {
+        // console.log("updating dialog", dialog);
+        return {
+          tabs: { ...state.tabs, [tab.id]: { ...tab } },
+        };
+      }),
+    addTab: (tab: DialogTab, dialogId: string) =>
+      set((state) => {
+        if (tab.id in state.tabs || !(dialogId in state.dialogs)) {
+          return;
+        }
+        state.tabs[tab.id] = tab;
+        state.dialogs[dialogId].tabs = [
+          ...state.dialogs[dialogId].tabs.filter((id) => id !== tab.id),
+        ];
+      }),
+    removeTab: (id: string) =>
+      set((state) => {
+        if (!(id in state.tabs)) {
+          console.log(`No tab with id ${id} found.`);
+          return;
+        }
+        const { [id]: removedTab, ...remainingTabs } = state.tabs;
+        state.tabs = remainingTabs;
+        state.dialogs[removedTab.dialogId].tabs = [
+          ...state.dialogOrder.filter((order) => order !== id),
+        ];
+      }),
     addDialog: (dialog: DialogRecord) =>
       set((state) => {
         if (dialog.id in state.dialogs) {

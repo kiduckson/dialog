@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDialogStore } from "@/app/store";
 import type { DialogTab, TabBehaviorProps, DialogClickEvent } from "./types";
 import { PanInfo, motion, useMotionValue } from "framer-motion";
@@ -49,6 +49,9 @@ interface ITabProps {
   showPortal: boolean;
 }
 
+const HEADER_X_PADDING = 8;
+const HEADER_Y_PADDING = 4;
+
 export default function Tab({
   tab,
   idx,
@@ -63,9 +66,26 @@ export default function Tab({
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const selectDialog = useDialogStore((state) => state.selectDialog);
+  const dialogs = useDialogStore((state) => state.dialogs);
+  const updateTab = useDialogStore((state) => state.updateTab);
   const [selected, setSelected] = useState(false);
-
-  const tabWidth = ref.current?.clientWidth ?? 96;
+  useEffect(() => {
+    if (ref.current) {
+      const tabWidth = ref.current.clientWidth;
+      updateTab({
+        ...tab,
+        x: dialogs[dialogId].x + tabWidth * idx,
+        y: dialogs[dialogId].y,
+        width: tabWidth,
+      });
+    }
+  }, [
+    ref,
+    dialogs[dialogId].x,
+    dialogs[dialogId].y,
+    dialogs[dialogId].width,
+    dialogs[dialogId].height,
+  ]);
 
   const selectTab = () => {
     selectDialog(dialogId);
@@ -77,19 +97,24 @@ export default function Tab({
       handleTabBehaviour({
         dialogId,
         tabId: tab.id,
-        tabWidth,
-        ax: info.offset.x + tabWidth * idx,
-        ay: info.offset.y,
         info,
         e,
       });
     }
   };
 
+  const [tipOn, setTipOn] = useState(false);
+
+  useEffect(() => {
+    if (selected) {
+      setTipOn(false);
+    }
+  }, [selected]);
+
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
+    <TooltipProvider delayDuration={400}>
+      <Tooltip open={tipOn} onOpenChange={(open) => setTipOn(open)}>
+        <TooltipTrigger>
           <motion.span
             ref={ref}
             className={cn(
@@ -127,15 +152,19 @@ export default function Tab({
             whileTap={{ scale: 1.02 }}
             tabIndex={-1}
           >
-            <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px]">
+            <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px] min-w-[70px]">
               {tab.title}
             </span>
-            <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px]">
+            <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px] min-w-[70px]">
               {tab.title}
             </span>
           </motion.span>
         </TooltipTrigger>
-        <TooltipContent className="border-border">
+        <TooltipContent
+          className="border-border"
+          avoidCollisions
+          hideWhenDetached
+        >
           <p>{tab.title}</p>
         </TooltipContent>
       </Tooltip>
