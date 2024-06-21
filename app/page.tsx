@@ -16,10 +16,10 @@ export default function Home() {
 
   return (
     <>
-      <nav className="grid grid-cols-[96px_1fr_40px] w-full h-10 border-b items-center gap-x-1">
+      <nav className="grid grid-cols-[96px_1fr_40px] w-full h-10 border-b items-center gap-x-1 border-border">
         <Link
           href="/"
-          className="flex justify-center items-center w-full h-full border-r font-bold"
+          className="flex justify-center items-center w-full h-full border-r font-bold border-border"
         >
           HOME
         </Link>
@@ -46,7 +46,7 @@ export default function Home() {
         </div>
       </nav>
       <div className="grid grid-cols-[96px_1fr_40px] grid-rows-[auto_40px] w-full h-full">
-        <div className="border-r">paper</div>
+        <div className="border-r border-border">paper</div>
         <DialogContainer />
       </div>
     </>

@@ -4,6 +4,12 @@ import type { DialogTab, TabBehaviorProps, DialogClickEvent } from "./types";
 import { PanInfo, motion, useMotionValue } from "framer-motion";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export const tabVariant = cva(
   "relative flex items-center gap-1 text-sm capitalize min-w-max h-max w-max overflow-visible hover:bg-slate-800/20  hover:dark:bg-slate-300/20 rounded-sm before:content-[''] before:block before:h-[12px] before:left-[-1px] before:absolute before:top-1/2 before:transform before:-translate-y-1/2 before:w-[1px] before:bg-muted-foreground",
@@ -81,45 +87,58 @@ export default function Tab({
   };
 
   return (
-    <motion.span
-      ref={ref}
-      className={cn(
-        tabVariant({
-          variant: selected ? "minimized" : isActive ? "active" : "default",
-          indicator: tabIndicator,
-        })
-      )}
-      drag={isDraggable}
-      style={{
-        x,
-        y,
-      }}
-      layout
-      onClick={selectTab}
-      onDragStart={() => {
-        selectTab();
-        setSelected(true);
-      }}
-      onDrag={(e, info) => {
-        handleDrag(e, info);
-      }}
-      onDragEnd={(e, info) => {
-        handleDrag(e, info);
-        setSelected(false);
-      }}
-      dragElastic={false}
-      dragMomentum={false}
-      dragSnapToOrigin
-      data-tab-id={tab.id}
-      whileTap={{ scale: 1.02 }}
-      tabIndex={-1}
-    >
-      <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px]">
-        {tab.title}
-      </span>
-      <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px]">
-        {tab.title}
-      </span>
-    </motion.span>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <motion.span
+            ref={ref}
+            className={cn(
+              tabVariant({
+                variant: selected
+                  ? "minimized"
+                  : isActive
+                  ? "active"
+                  : "default",
+                indicator: tabIndicator,
+              })
+            )}
+            drag={isDraggable}
+            style={{
+              x,
+              y,
+            }}
+            layout
+            onClick={selectTab}
+            onDragStart={() => {
+              selectTab();
+              setSelected(true);
+            }}
+            onDrag={(e, info) => {
+              handleDrag(e, info);
+            }}
+            onDragEnd={(e, info) => {
+              handleDrag(e, info);
+              setSelected(false);
+            }}
+            dragElastic={false}
+            dragMomentum={false}
+            dragSnapToOrigin
+            data-tab-id={tab.id}
+            whileTap={{ scale: 1.02 }}
+            tabIndex={-1}
+          >
+            <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px]">
+              {tab.title}
+            </span>
+            <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px]">
+              {tab.title}
+            </span>
+          </motion.span>
+        </TooltipTrigger>
+        <TooltipContent className="border-border">
+          <p>{tab.title}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

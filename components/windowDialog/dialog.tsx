@@ -1,3 +1,8 @@
+/*
+TODO: 고정 넓이
+TODO: Tab머지 정보 수정 
+*/
+
 "use client";
 
 import {
@@ -247,7 +252,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
     return (
       <motion.div
         className={cn(
-          "absolute top-0 left-0 flex flex-col bg-accent border rounded-sm",
+          "absolute top-0 left-0 flex flex-col bg-accent border border-border rounded-sm",
           selected ? "shadow-md" : "shadow-sm"
           // dragSelected &&
           //   "after:content-[''] after:absolute after:inset-0 after:rounded-sm after:z-10 after:bg-slate-300/25"
@@ -292,7 +297,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>(
         {/* headers */}
         <motion.div
           // layout
-          className={`dialog-handle flex items-center relative justify-between h-6 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b`}
+          className={`dialog-handle flex items-center relative justify-between h-6 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b border-border`}
           tabIndex={-1}
           onDoubleClick={handleDoubleClick}
           data-dialog-id={dialog.id}

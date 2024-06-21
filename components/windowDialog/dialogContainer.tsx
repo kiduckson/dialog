@@ -378,7 +378,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>(
 
     return (
       <div
-        className="relative border-r border-b"
+        className="relative border-r border-b border-border"
         ref={ref}
         onClick={handleClick}
       >
