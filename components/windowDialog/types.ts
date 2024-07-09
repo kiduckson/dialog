@@ -26,6 +26,7 @@ export interface DialogRecord {
   prevX: number;
   prevY: number;
   enlargeType: DialogEnlargedType;
+  open: boolean;
 }
 
 export interface DialogTab {
@@ -40,7 +41,6 @@ export interface DialogTab {
 export type DialogStoreState = {
   dialogs: Record<string, DialogRecord>;
   tabs: Record<string, DialogTab>;
-  length: number;
   activeDialog: string;
   dialogOrder: string[];
 };

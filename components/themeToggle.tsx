@@ -18,8 +18,6 @@ export function ThemeToggle() {
     setTheme(theme === "dark" ? "light" : "dark");
   };
 
-  console.log("rotateDeg", rotateDeg.current);
-
   React.useEffect(() => {
     setMount(true);
   }, []);

@@ -4,12 +4,7 @@ import type { DialogTab, TabBehaviorProps, DialogClickEvent } from "./types";
 import { PanInfo, motion, useMotionValue } from "framer-motion";
 import { cva } from "class-variance-authority";
 import { cn } from "@/lib/utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export const tabVariant = cva(
   "relative flex items-center gap-1 text-sm capitalize min-w-max h-max w-max overflow-visible hover:bg-slate-800/20  hover:dark:bg-slate-300/20 rounded-sm before:content-[''] before:block before:h-[12px] before:left-[-1px] before:absolute before:top-1/2 before:transform before:-translate-y-1/2 before:w-[1px] before:bg-muted-foreground",
@@ -23,10 +18,8 @@ export const tabVariant = cva(
 
       indicator: {
         none: "",
-        after:
-          "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-right-1",
-        before:
-          "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-left-1",
+        after: "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-right-1",
+        before: "after:content-[''] after:absolute after:h-full after:w-1 after:bg-muted-foreground after:-left-1",
       },
     },
     defaultVariants: {
@@ -52,40 +45,23 @@ interface ITabProps {
 const HEADER_X_PADDING = 8;
 const HEADER_Y_PADDING = 4;
 
-export default function Tab({
-  tab,
-  idx,
-  dialogId,
-  isDraggable,
-  isActive,
-  handleTabBehaviour,
-  updateActiveTab,
-  tabIndicator,
-}: ITabProps) {
+export default function Tab({ tab, idx, dialogId, isDraggable, isActive, handleTabBehaviour, updateActiveTab, tabIndicator }: ITabProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
   const selectDialog = useDialogStore((state) => state.selectDialog);
-  const dialogs = useDialogStore((state) => state.dialogs);
   const updateTab = useDialogStore((state) => state.updateTab);
   const [selected, setSelected] = useState(false);
+
   useEffect(() => {
     if (ref.current) {
       const tabWidth = ref.current.clientWidth;
       updateTab({
         ...tab,
-        x: dialogs[dialogId].x + tabWidth * idx,
-        y: dialogs[dialogId].y,
         width: tabWidth,
       });
     }
-  }, [
-    ref,
-    dialogs[dialogId].x,
-    dialogs[dialogId].y,
-    dialogs[dialogId].width,
-    dialogs[dialogId].height,
-  ]);
+  }, [ref]);
 
   const selectTab = () => {
     selectDialog(dialogId);
@@ -112,18 +88,14 @@ export default function Tab({
   }, [selected]);
 
   return (
-    <TooltipProvider delayDuration={400}>
+    <TooltipProvider delayDuration={0}>
       <Tooltip open={tipOn} onOpenChange={(open) => setTipOn(open)}>
         <TooltipTrigger>
           <motion.span
             ref={ref}
             className={cn(
               tabVariant({
-                variant: selected
-                  ? "minimized"
-                  : isActive
-                  ? "active"
-                  : "default",
+                variant: selected ? "minimized" : isActive ? "active" : "default",
                 indicator: tabIndicator,
               })
             )}
@@ -133,6 +105,7 @@ export default function Tab({
               y,
             }}
             layout
+            // key={`${tab.dialogId}_${idx}_${tab.id}`}
             onClick={selectTab}
             onDragStart={() => {
               selectTab();
@@ -151,20 +124,13 @@ export default function Tab({
             data-tab-id={tab.id}
             whileTap={{ scale: 1.02 }}
             tabIndex={-1}
+            data-tab-width={ref.current?.clientWidth}
           >
-            <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px] min-w-[70px]">
-              {tab.title}
-            </span>
-            <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px] min-w-[70px]">
-              {tab.title}
-            </span>
+            <span className="selected truncate font-black px-2 py-1 text-ellipsis max-w-[140px] min-w-[70px]">{tab.title}</span>
+            <span className="unselected absolute left-0 top-0 truncate font-normal px-2 py-1 text-ellipsis max-w-[140px] min-w-[70px]">{tab.title}</span>
           </motion.span>
         </TooltipTrigger>
-        <TooltipContent
-          className="border-border"
-          avoidCollisions
-          hideWhenDetached
-        >
+        <TooltipContent className="border-border" avoidCollisions hideWhenDetached>
           <p>{tab.title}</p>
         </TooltipContent>
       </Tooltip>
