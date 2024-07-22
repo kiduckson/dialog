@@ -16,14 +16,9 @@ import type {
 
 import Dialog from "./dialog";
 import { AnimatePresence, MotionValue, PanInfo } from "framer-motion";
-
+import { getFixedDirection } from "@/lib/utils";
 /**
  */
-
-const X_THRESHOLD = 8;
-const Y_THRESHOLD = 4;
-const ENLARGE_THRESHOLD = 20;
-const TAB_HEIGHT = 24;
 
 const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>((props, forwardedRef) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -67,6 +62,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>((prop
     }
     selectDialog(id);
   };
+  
   const handleDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLDivElement;
     const dialogId = target.dataset.dialogId;
@@ -164,12 +160,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>((prop
    *
    */
 
-  const findTargetDialog = (
-    x: number,
-    y: number,
-    dialogsArray: DialogRecord[],
-    tabs: Record<string, DialogTab>
-  ): [DialogRecord | undefined, number] => {
+  const findTargetDialog = (x: number, y: number, dialogsArray: DialogRecord[], tabs: Record<string, DialogTab>): [DialogRecord | undefined, number] => {
     const targetDialog = dialogsArray.find((dialog) => {
       const yThrest = dialog.y + 40;
       const xThresh = dialog.x + dialog.width;
@@ -332,7 +323,7 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>((prop
   };
 
   return (
-    <div className="relative border-r border-b border-border" ref={ref} onClick={handleClick}>
+    <div className="relative w-full h-full" ref={ref} onClick={handleClick}>
       {dialogOrder.map((dialogId) => (
         <Dialog
           containerRef={ref}
@@ -374,48 +365,3 @@ const DialogContainer = forwardRef<WindowDialogElement, WindowDialogProps>((prop
 DialogContainer.displayName = "DialogContainer";
 
 export default DialogContainer;
-
-//// utils
-// always horizontal first
-function getFixedDirection(
-  x: number,
-  y: number,
-  containerWidth: number,
-  containerHeight: number
-): [Exclude<DialogEnlargedType, "full">, boolean, DialogPosition] {
-  const leftCond = x < -ENLARGE_THRESHOLD;
-  const rightCond = x > containerWidth + ENLARGE_THRESHOLD;
-  const topCond = y < -ENLARGE_THRESHOLD / 2;
-  const bottomCond = y > containerHeight + ENLARGE_THRESHOLD / 2;
-
-  const conditions = [
-    { cond: topCond && leftCond, direction: "topLeft" },
-    { cond: topCond && rightCond, direction: "topRight" },
-    { cond: bottomCond && leftCond, direction: "bottomLeft" },
-    { cond: bottomCond && rightCond, direction: "bottomRight" },
-    { cond: leftCond, direction: "left" },
-    { cond: rightCond, direction: "right" },
-    { cond: topCond, direction: "top" },
-    { cond: bottomCond, direction: "bottom" },
-  ];
-
-  let direction = "center";
-  let display = false;
-
-  for (const condition of conditions) {
-    if (condition.cond) {
-      direction = condition.direction;
-      display = true;
-      break;
-    }
-  }
-
-  const cordinates = {
-    x: /(right)/i.test(direction) ? containerWidth / 2 : 0,
-    y: /(bottom)/i.test(direction) ? containerHeight / 2 : 0,
-    width: /(right|left)/i.test(direction) ? containerWidth / 2 : containerWidth,
-    height: /(top|bottom)/i.test(direction) ? containerHeight / 2 : containerHeight,
-  };
-
-  return [direction as Exclude<DialogEnlargedType, "full">, display, cordinates];
-}

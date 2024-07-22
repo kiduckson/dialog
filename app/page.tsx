@@ -1,54 +1,16 @@
-"use client";
-
-import DialogContainer from "@/components/windowDialog/dialogContainer";
-import Link from "next/link";
-import { useDialogStore } from "./store";
-import { Button } from "@/components/ui/button";
-import { Moon } from "lucide-react";
-import { useTheme } from "next-themes";
-import { ThemeToggle } from "@/components/themeToggle";
+import { cookies } from "next/headers";
+import ResizableLayout from "./components/resizable-layout";
 
 export default function Home() {
-  const selectdDialog = useDialogStore((state) => state.activeDialog);
-  const dialogs = useDialogStore((state) => state.dialogs);
-  const dialogOrder = useDialogStore((state) => state.dialogOrder);
-  const { setTheme } = useTheme();
+  const layout = cookies().get("react-resizable-panels:layout");
+  const collapsed = cookies().get("react-resizable-panels:collapsed");
+
+  const defaultLayout = layout ? JSON.parse(layout.value) : undefined;
+  const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined;
 
   return (
-    <>
-      <nav className="grid grid-cols-[96px_1fr_40px] w-full h-10 border-b items-center gap-x-1 border-border">
-        <Link
-          href="/"
-          className="flex justify-center items-center w-full h-full border-r font-bold border-border"
-        >
-          HOME
-        </Link>
-        <div className="flex px-4 gap-x-3 items-center text-xs">
-          <ThemeToggle />
-          <div className="flex gap-x-1 items-center">
-            <span className="text-primary font-bold">Selected </span>
-            <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">
-              {selectdDialog === "" ? "----" : selectdDialog}
-            </span>
-          </div>
-          <div className="flex gap-x-1 items-center">
-            <span className="text-primary font-bold">Dialog Order Count </span>
-            <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">
-              {dialogOrder.length}
-            </span>
-          </div>
-          <div className="flex gap-x-1 items-center">
-            <span className="text-primary font-bold">Dialogs Count </span>
-            <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">
-              {Object.keys(dialogs).length}
-            </span>
-          </div>
-        </div>
-      </nav>
-      <div className="grid grid-cols-[96px_1fr_40px] grid-rows-[auto_40px] w-full h-full">
-        <div className="border-r border-border">paper</div>
-        <DialogContainer />
-      </div>
-    </>
+    <section className="flex flex-col h-screen w-svw">
+      <ResizableLayout defaultLayout={defaultLayout} defaultCollapsed={defaultCollapsed} />
+    </section>
   );
 }

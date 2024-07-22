@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createContext } from "@/lib/context";
-import { DialogRecord, DialogTab, DialogStoreState } from "./types";
+import { DialogRecord, DialogTab, DialogStoreState, DialogClickEvent } from "./types";
 import { useImmerReducer } from "use-immer";
 
 export const WINDOW_DIALOG_NAME = "windowDialog";
@@ -107,7 +107,6 @@ const reducer = (state: DialogStoreState, action: Action) => {
 
 const WindowDialog: React.FC<WindowDialogProps> = ({ children }) => {
   const [state, dispatch] = useImmerReducer(reducer, initialState);
-
   const addDialog = React.useCallback((dialog: DialogRecord) => dispatch({ type: ACTION_TYPE.ADD_DIALOG, dialog }), [dispatch]);
   const removeDialog = React.useCallback((id: string) => dispatch({ type: ACTION_TYPE.REMOVE_DIALOG, id }), [dispatch]);
   const updateDialog = React.useCallback((dialog: DialogRecord) => dispatch({ type: ACTION_TYPE.UPDATE_DIALOG, dialog }), [dispatch]);
@@ -116,20 +115,36 @@ const WindowDialog: React.FC<WindowDialogProps> = ({ children }) => {
   const updateTab = React.useCallback((tab: DialogTab) => dispatch({ type: ACTION_TYPE.UPDATE_TAB, tab }), [dispatch]);
   const selectDialog = React.useCallback((id: string) => dispatch({ type: ACTION_TYPE.SELECT_DIALOG, id }), [dispatch]);
 
+  const handleDialogClick = (e: DialogClickEvent) => {
+    e.stopPropagation();
+    let el: HTMLElement | null = e.target as HTMLElement; 
+    let id;
+    while (el) {
+      if (el?.dataset.dialogId) {
+        id = el.dataset.dialogId;
+        break;
+      }
+      el = el.parentElement;
+    }
+    selectDialog(id);
+  };
+
   return (
-    <WindowDialogProvider {...{ ...state, addDialog, removeDialog, updateDialog, addTab, removeTab, updateTab, selectDialog }}>{children}</WindowDialogProvider>
+    <WindowDialogProvider {...{ ...state, addDialog, removeDialog, updateDialog, addTab, removeTab, updateTab, selectDialog }}>
+      {children}
+    </WindowDialogProvider>
   );
 };
 
 WindowDialog.displayName = WINDOW_DIALOG_NAME;
 
-const useWindowDialog = () => {
-  const context = useWindowDialogContext(WINDOW_DIALOG_NAME);
-  if (!context) {
-    throw new Error("useWindowDialog must be used within a WindowDialogProvider");
-  }
-  return context;
-};
+// const useWindowDialog = () => {
+//   const context = useWindowDialogContext(WINDOW_DIALOG_NAME);
+//   if (!context) {
+//     throw new Error("useWindowDialog must be used within a WindowDialogProvider");
+//   }
+//   return context;
+// };
 
 const Provider = WindowDialog;
-export { Provider, useWindowDialog };
+// export { Provider, useWindowDialog };

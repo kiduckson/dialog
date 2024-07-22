@@ -40,5 +40,5 @@ const DialogHandle = forwardRef<HTMLDivElement, DialogHandleProps>(
     );
   }
 );
-
+DialogHandle.displayName = 'DialogHandle'
 export default DialogHandle;
