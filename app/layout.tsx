@@ -25,15 +25,8 @@ export default function RootLayout({
     <html lang="en">
       <head />
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <main className="flex h-svh w-svw flex-col items-center justify-between bg-background">
-            {children}
-          </main>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+          <main className="flex flex-col h-screen w-svw">{children}</main>
         </ThemeProvider>
       </body>
     </html>

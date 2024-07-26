@@ -1,8 +1,3 @@
-/*
-TODO: 고정 넓이
-TODO: Tab머지 정보 수정 
-*/
-
 "use client";
 
 import { PanInfo, motion, useDragControls, useMotionValue, useMotionValueEvent } from "framer-motion";
@@ -14,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { cva } from "class-variance-authority";
 import DialogHandle from "./dialogHandle";
 import Tab from "./tab";
+import { useWindowDialog } from "./dialogProviders";
 
 export enum ExpandDirection {
   top,
@@ -50,16 +46,16 @@ export const handleVariant = cva("absolute rounded-sm", {
 });
 
 interface IDialogProps {
-  dialog: DialogRecord;
+  dialogId: string;
   handleClick: any;
   selected: boolean;
-  handleTabBehaviour: (props: TabBehaviorProps) => void;
-  handleDoubleClick: React.MouseEventHandler<HTMLDivElement>;
-  handlePresetDialogSize: any;
+  // handleTabBehaviour: (props: TabBehaviorProps) => void;
+  // handleDoubleClick: React.MouseEventHandler<HTMLDivElement>;
+  // handlePresetDialogSize: any;
+  // showPortal: boolean;
   displayIndicator: boolean;
   indicatorIdx: number;
   containerRef: React.RefObject<HTMLDivElement>;
-  showPortal: boolean;
 }
 
 type DialogElement = React.ElementRef<"div">;
@@ -68,54 +64,28 @@ const MIN_Y = 140;
 const MIN_X = 280;
 
 const Dialog = forwardRef<DialogElement, IDialogProps>((props, forwardedRef) => {
-  const {
-    dialog,
-    handleClick,
-    selected,
-    handleTabBehaviour,
-    handleDoubleClick,
-    handlePresetDialogSize,
-    displayIndicator,
-    indicatorIdx,
-    containerRef,
-    showPortal,
-  } = props;
+  const { dialogId, handleClick, selected, displayIndicator, indicatorIdx, containerRef } = props;
+
+  const { dialogs, updateDialog, selectDialog, dialogOrder, handleDialogMovement, tabs } = useWindowDialog();
+  const dialog = dialogs[dialogId];
   const controls = useDragControls();
   const dialogRef = useRef<HTMLDivElement>(null);
-  const tabs = useDialogStore((state) => state.tabs);
-  const updateDialog = useDialogStore((state) => state.updateDialog);
-  const selectDialog = useDialogStore((state) => state.selectDialog);
-  const dialogOrder = useDialogStore((state) => state.dialogOrder);
 
   const x = useMotionValue(dialog.x);
   const y = useMotionValue(dialog.y);
   const width = useMotionValue(dialog.width);
   const height = useMotionValue(dialog.height);
 
-  const [dragSelected, setDragSelected] = useState(false);
-
-  useMotionValueEvent(x, "change", (latest) => {
-    // console.log("useMotionValueEvent change x", latest, dialog.enlargeType);
-    setDragSelected(true);
-  });
-
-  useMotionValueEvent(y, "change", (latest) => {
-    // console.log("useMotionValueEvent change y", latest, dialog.enlargeType);
-    setDragSelected(true);
-  });
-  // x, y이동
   useMotionValueEvent(x, "animationComplete", () => {
     if (["top", "left", "topLeft", "bottom"].includes(dialog.enlargeType)) {
       x.set(0);
     }
-    setDragSelected(false);
   });
 
   useMotionValueEvent(y, "animationComplete", () => {
     if (["top", "left", "topLeft", "right"].includes(dialog.enlargeType)) {
       y.set(0);
     }
-    setDragSelected(false);
   });
 
   // 리사이즈 기능
@@ -123,7 +93,6 @@ const Dialog = forwardRef<DialogElement, IDialogProps>((props, forwardedRef) => 
     const setRight = () => {
       const minXReached = dialog.width + info.offset.x < MIN_X;
       const offsetX = minXReached ? -(dialog.width - MIN_X) : info.offset.x;
-
       const maxWidth = (containerRef.current?.clientWidth as number) - dialog.x;
       const newWidth = dialog.width + offsetX;
       width.set(Math.min(newWidth, maxWidth));
@@ -240,7 +209,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>((props, forwardedRef) => 
       transition={{
         layout: {
           ease: "linear",
-          duration: 0.2,
+          duration: 0.1,
         },
       }}
       animate={{
@@ -256,10 +225,10 @@ const Dialog = forwardRef<DialogElement, IDialogProps>((props, forwardedRef) => 
       dragMomentum={false}
       dragControls={controls}
       onDrag={(e, info) => {
-        handlePresetDialogSize(dialog, e, info, x.get(), y.get());
+        handleDialogMovement({ dialogId: dialog.id, info, mx: x.get(), my: y.get() });
       }}
       onDragEnd={(e, info) => {
-        handlePresetDialogSize(dialog, e, info, x.get(), y.get());
+        handleDialogMovement({ dialogId: dialog.id, info, mx: x.get(), my: y.get(), isEnd: true });
       }}
       dragListener={false}
       onClick={handleClick}
@@ -272,7 +241,7 @@ const Dialog = forwardRef<DialogElement, IDialogProps>((props, forwardedRef) => 
         // layout
         className={`dialog-handle flex items-center relative justify-between h-6 min-h-10 px-2 cursor-pointer select-none bg-card rounded-t-sm border-b border-border`}
         tabIndex={-1}
-        onDoubleClick={handleDoubleClick}
+        // onDoubleClick={handleDoubleClick}
         data-dialog-id={dialog.id}
         onPointerDown={(event) => {
           controls.start(event);
@@ -292,10 +261,9 @@ const Dialog = forwardRef<DialogElement, IDialogProps>((props, forwardedRef) => 
               dialogId={dialog.id}
               isActive={activeTab === tabId}
               isDraggable={true}
-              handleTabBehaviour={handleTabBehaviour}
+              // handleTabBehaviour={handleTabBehaviour}
               updateActiveTab={updateActiveTab}
               tabIndicator={idxIndicator === idx ? pos : "none"}
-              showPortal={showPortal}
             />
           ))}
         </motion.div>

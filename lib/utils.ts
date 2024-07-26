@@ -13,11 +13,11 @@ export function getFixedDirection(
   y: number,
   containerWidth: number,
   containerHeight: number
-): [Exclude<DialogEnlargedType, "full">, boolean, DialogPosition] {
+): [Exclude<DialogEnlargedType, "full">, DialogPosition] {
   const leftCond = x < -ENLARGE_THRESHOLD;
   const rightCond = x > containerWidth + ENLARGE_THRESHOLD;
   const topCond = y < -ENLARGE_THRESHOLD / 2;
-  const bottomCond = y > containerHeight + ENLARGE_THRESHOLD / 2;
+  const bottomCond = y > containerHeight - ENLARGE_THRESHOLD / 2;
 
   const conditions = [
     { cond: topCond && leftCond, direction: "topLeft" },
@@ -31,12 +31,10 @@ export function getFixedDirection(
   ];
 
   let direction = "center";
-  let display = false;
 
   for (const condition of conditions) {
     if (condition.cond) {
       direction = condition.direction;
-      display = true;
       break;
     }
   }
@@ -48,5 +46,5 @@ export function getFixedDirection(
     height: /(top|bottom)/i.test(direction) ? containerHeight / 2 : containerHeight,
   };
 
-  return [direction as Exclude<DialogEnlargedType, "full">, display, cordinates];
+  return [direction as Exclude<DialogEnlargedType, "full">, cordinates];
 }

@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import ResizableLayout from "./components/resizable-layout";
+import { Provider } from "@/components/windowDialog/dialogProviders";
 
 export default function Home() {
   const layout = cookies().get("react-resizable-panels:layout");
@@ -9,8 +10,8 @@ export default function Home() {
   const defaultCollapsed = collapsed ? JSON.parse(collapsed.value) : undefined;
 
   return (
-    <section className="flex flex-col h-screen w-svw">
+    <Provider>
       <ResizableLayout defaultLayout={defaultLayout} defaultCollapsed={defaultCollapsed} />
-    </section>
+    </Provider>
   );
 }

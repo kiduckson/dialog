@@ -1,16 +1,7 @@
 import type { PanInfo } from "framer-motion";
+import { GUIDE_STATE } from "./dialogProviders";
 
-export type DialogEnlargedType =
-  | "left"
-  | "right"
-  | "top"
-  | "bottom"
-  | "topLeft"
-  | "topRight"
-  | "bottomLeft"
-  | "bottomRight"
-  | "full"
-  | "center";
+export type DialogEnlargedType = "left" | "right" | "top" | "bottom" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight" | "full" | "center";
 
 export interface DialogRecord {
   id: string;
@@ -36,13 +27,22 @@ export interface DialogTab {
   x: number;
   y: number;
   width: number;
+  height: number;
 }
 
 export type DialogStoreState = {
   dialogs: Record<string, DialogRecord>;
   tabs: Record<string, DialogTab>;
   activeDialog: string;
+  recalculateIdx: number;
   dialogOrder: string[];
+  isGuide: boolean;
+  guideDimension: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 };
 
 export type DialogStoreActions = {
@@ -55,14 +55,9 @@ export type DialogStoreActions = {
   selectDialog: (id: string | undefined) => void;
 };
 
-export interface DialogPosition
-  extends Pick<DialogRecord, "x" | "y" | "width" | "height"> {}
+export interface DialogPosition extends Pick<DialogRecord, "x" | "y" | "width" | "height"> {}
 
-export type DialogClickEvent =
-  | React.MouseEvent<HTMLDivElement>
-  | MouseEvent
-  | TouchEvent
-  | PointerEvent;
+export type DialogClickEvent = React.MouseEvent<HTMLDivElement> | MouseEvent | TouchEvent | PointerEvent;
 
 export interface TabBehaviorProps {
   dialogId: string;

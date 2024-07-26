@@ -7,14 +7,10 @@ import { useDialogStore } from "@/app/store";
 import { ThemeToggle } from "@/components/themeToggle";
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/components/ui/resizable-panel";
 import { cn } from "@/lib/utils";
+import { useWindowDialog, WindowDialogContainer, WindowDialogContent, Provider as WindowDialogProvider } from "@/components/windowDialog/dialogProviders";
 
 export default function ResizableLayout({ defaultLayout = [20, 80], defaultCollapsed }: { defaultLayout: number[] | undefined; defaultCollapsed?: boolean }) {
-  const activeDialog = useDialogStore((state) => state.activeDialog);
-  const selectDialog = useDialogStore((state) => state.selectDialog);
-  const updateDialog = useDialogStore((state) => state.updateDialog);
-  const dialogs = useDialogStore((state) => state.dialogs);
-  const dialogOrder = useDialogStore((state) => state.dialogOrder);
-  const tabs = useDialogStore((state) => state.tabs);
+  const { selectDialog, updateDialog, tabs, dialogs, activeDialog, dialogOrder, recalculateWrapper } = useWindowDialog();
   const selected = React.useMemo(() => {
     const diaglog = dialogs[activeDialog];
     return diaglog?.activeTab ?? "";
@@ -22,6 +18,7 @@ export default function ResizableLayout({ defaultLayout = [20, 80], defaultColla
 
   const onLayout = (sizes: number[]) => {
     document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`;
+    recalculateWrapper();
   };
 
   const handleTabClick = (id: string) => {
@@ -35,7 +32,7 @@ export default function ResizableLayout({ defaultLayout = [20, 80], defaultColla
   };
 
   return (
-    <ResizablePanelGroup direction="horizontal" onLayout={onLayout} className="h-full w-full items-stretch">
+    <ResizablePanelGroup direction="horizontal" onLayout={onLayout} className="h-full w-full items-stretch overflow-auto">
       <ResizablePanel defaultSize={defaultLayout[0]} minSize={10} maxSize={40}>
         <div className="flex flex-col">
           <span className="h-8 border-border border-b">
@@ -65,22 +62,26 @@ export default function ResizableLayout({ defaultLayout = [20, 80], defaultColla
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={defaultLayout[1]} minSize={40}>
-        <div className="h-8 border-b border-border flex gap-x-3 items-center text-xs">
-          <ThemeToggle />
-          <div className="flex gap-x-1 items-center">
-            <span className="text-primary font-bold">Selected </span>
-            <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">{activeDialog === "" ? "----" : activeDialog}</span>
+        <div className="flex flex-col h-full w-full">
+          <div className="h-8 border-b border-border flex gap-x-3 items-center text-xs">
+            <ThemeToggle />
+            <div className="flex gap-x-1 items-center">
+              <span className="text-primary font-bold">Selected </span>
+              <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">{activeDialog === "" ? "----" : activeDialog}</span>
+            </div>
+            <div className="flex gap-x-1 items-center">
+              <span className="text-primary font-bold">Dialog Order Count </span>
+              <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">{dialogOrder.length}</span>
+            </div>
+            <div className="flex gap-x-1 items-center">
+              <span className="text-primary font-bold">Dialogs Count </span>
+              <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">{Object.keys(dialogs).length}</span>
+            </div>
           </div>
-          <div className="flex gap-x-1 items-center">
-            <span className="text-primary font-bold">Dialog Order Count </span>
-            <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">{dialogOrder.length}</span>
-          </div>
-          <div className="flex gap-x-1 items-center">
-            <span className="text-primary font-bold">Dialogs Count </span>
-            <span className="rounded-full px-2 py-1 bg-slate-300 dark:bg-slate-800">{Object.keys(dialogs).length}</span>
+          <div className="h-full w-full">
+            <WindowDialogContainer />
           </div>
         </div>
-        <DialogContainer />
       </ResizablePanel>
     </ResizablePanelGroup>
   );
