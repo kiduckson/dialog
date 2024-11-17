@@ -26,7 +26,7 @@ export interface DialogRecord {
   prevX: number;
   prevY: number;
   enlargeType: DialogEnlargedType;
-  open: boolean;
+  // open: boolean;
 }
 
 export interface DialogTab {
@@ -55,8 +55,7 @@ export type DialogStoreActions = {
   selectDialog: (id: string | undefined) => void;
 };
 
-export interface DialogPosition
-  extends Pick<DialogRecord, "x" | "y" | "width" | "height"> {}
+export interface DialogPosition extends Pick<DialogRecord, "x" | "y" | "width" | "height"> {}
 
 export type DialogClickEvent =
   | React.MouseEvent<HTMLDivElement>
